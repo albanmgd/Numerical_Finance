@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "../RandomGenerator/LinearCongruential.h"
 #include "../RandomGenerator/EcuyerCombined.h"
 #include "../RandomGenerator/FiniteSet.h"
@@ -6,6 +7,7 @@
 #include "../RandomGenerator/Normal.h"
 #include "../RandomGenerator/Poisson.h"
 #include "../PDE/PDEGrid2D.h"
+#include "../SDE/BSEuler1D.h"
 
 void TestPDE();
 void TestRandom();
@@ -13,9 +15,9 @@ void TestSDE();
 
 int main()
 {
-    TestRandom();
-    TestPDE();
-    //TestSDE();
+    //TestRandom();
+    //TestPDE();
+    TestSDE();
 }
 
 void TestRandom()
@@ -76,7 +78,7 @@ void TestPDE()
     R1R1Function* BottomBoundaryFunction = new CallBottomBoundary(SMin, Strike);
     R1R1Function* RightBoundaryFunction = new CallTerminalCondition(Strike);
 
-    PDEGrid2DExplicit BlackScholesGrid(Maturity, SMin, SMax, 10000, 1.,
+    PDEGrid2DExplicit BlackScholesGrid(Maturity, SMin, SMax, 1000, 1.,
         VarianceFunction, TrendFunction, ActualizationFunction, SourceTermFunction,
         TopBoundaryFunction, BottomBoundaryFunction, RightBoundaryFunction);
 
@@ -86,3 +88,57 @@ void TestPDE()
     std::cout << "Price = " << priceAtZero << std::endl;
 }
 
+void TestSDE()
+{
+    UniformGenerator* Unif = new EcuyerCombined();
+    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
+
+    double spot = 100.;
+    double rate = 0.05;
+    double vol = 0.1;
+    // Build the Euler scheme for 1D black scholes
+    BSEuler1D Scheme = BSEuler1D(NormBox, spot, rate, vol);
+    
+    /* Compute the price of an option */
+
+    double T = 1.; // Maturity
+    double K = 100; // Strike
+    myLong nbSteps = 365; // Number of steps from 0 to T for one path
+    myLong nbSimul = 100000.; // Number of Monte Carlo simulations
+
+    double Price = 0.; // Price of the Call option
+
+    for (myLong i = 0; i < nbSimul; ++i)
+    {
+        // Simulate the current path
+        Scheme.Simulate(0., T, nbSteps);
+        // Get the last value of ST on the current path
+        double ST = Scheme.GetPath(0)->GetValue(T);
+        // Compute the payoff
+        double payoff = std::max<double>(ST - K, 0);
+        // Compute and store average
+        Price += payoff / nbSimul;
+    }
+    // Discount the price
+    Price *= exp(-rate * T);
+    // Print the price
+    cout << "The price of BS Call is : " << Price << endl;
+
+    // Example of path
+    std::cout << "------------- Example of path ------------------" << endl;
+    // Simulate the process once, to test the path generation
+    Scheme.Simulate(0., 1., 100);
+    // Get the current path
+    SinglePath* path = Scheme.GetPath(0);
+    // Read times and values from the path
+    vector<double>& pathTimes = path->GetTimes();
+    vector<double>& pathValues = path->GetValues();
+    // Print the path
+    for (size_t i = 0; i < pathTimes.size(); ++i)
+    {
+        std::cout << pathTimes[i] << " " << pathValues[i] << std::endl;
+    }
+
+    string input = "";
+    std::cin >> input;
+}

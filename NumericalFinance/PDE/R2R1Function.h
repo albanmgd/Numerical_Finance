@@ -7,7 +7,7 @@ public:
 	virtual double operator()(double x, double t) = 0;
 };
 
-static class NullFunction : public R2R1Function
+class NullFunction : public R2R1Function
 {
 public:
 	NullFunction();

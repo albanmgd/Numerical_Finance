@@ -17,7 +17,7 @@ CallTerminalCondition::CallTerminalCondition(double strike) : VanillaTerminalCon
 
 double CallTerminalCondition::operator()(double x)
 {
-	throw std::exception("Not implemented");
+	return std::max(x - Strike, 0.);
 }
 
 PutTerminalCondition::PutTerminalCondition(double strike) : VanillaTerminalCondition(strike)
@@ -25,7 +25,7 @@ PutTerminalCondition::PutTerminalCondition(double strike) : VanillaTerminalCondi
 
 double PutTerminalCondition::operator()(double x)
 {
-	throw std::exception("Not implemented");
+	return std::max(Strike - x, 0.);
 }
 
 // Top and Bottom conditions
@@ -35,7 +35,7 @@ CallTopBoundary::CallTopBoundary(double sMax, double strike) : R1R1Function(), S
 
 double CallTopBoundary::operator()(double t)
 {
-	throw std::exception("Not implemented");
+	return std::max(SMax - Strike, 0.);
 }
 
 PutTopBoundary::PutTopBoundary(double sMax, double strike) : R1R1Function(), SMax(sMax), Strike(strike)
@@ -43,7 +43,7 @@ PutTopBoundary::PutTopBoundary(double sMax, double strike) : R1R1Function(), SMa
 
 double PutTopBoundary::operator()(double t)
 {
-	throw std::exception("Not implemented");
+	return std::max(Strike - SMax, 0.);
 }
 
 CallBottomBoundary::CallBottomBoundary(double sMin, double strike) : R1R1Function(), SMin(sMin), Strike(strike)
@@ -51,7 +51,7 @@ CallBottomBoundary::CallBottomBoundary(double sMin, double strike) : R1R1Functio
 
 double CallBottomBoundary::operator()(double t)
 {
-	throw std::exception("Not implemented");
+	return std::max(SMin - Strike, 0.);
 }
 
 PutBottomBoundary::PutBottomBoundary(double sMin, double strike) : R1R1Function(), SMin(sMin), Strike(strike)
@@ -59,5 +59,5 @@ PutBottomBoundary::PutBottomBoundary(double sMin, double strike) : R1R1Function(
 
 double PutBottomBoundary::operator()(double t)
 {
-	throw std::exception("Not implemented");
+	return std::max(Strike - SMin, 0.);
 }
