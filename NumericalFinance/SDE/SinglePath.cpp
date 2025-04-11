@@ -1,4 +1,5 @@
 #include "SinglePath.h"
+#include <stdexcept>
 
 SinglePath::SinglePath(double start, double end, size_t nbSteps) : 
 	StartTime(start), 
@@ -7,7 +8,7 @@ SinglePath::SinglePath(double start, double end, size_t nbSteps) :
 {
 	if (nbSteps == 0)
 	{
-		throw exception("Nb Steps is zero");
+		throw std::runtime_error("Nb Steps is zero");
 	}
 	timeStep = (EndTime - StartTime) / nbSteps;
 }

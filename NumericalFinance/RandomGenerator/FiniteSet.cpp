@@ -1,4 +1,5 @@
 #include "FiniteSet.h"
+#include <stdexcept>
 
 FiniteSet::FiniteSet(const std::vector<double>& inputProb, UniformGenerator* uniform)
 {
@@ -9,7 +10,7 @@ FiniteSet::FiniteSet(const std::vector<double>& inputProb, UniformGenerator* uni
 		double currentProb = inputProb[i];
 		if (currentProb < 0 || currentProb > 1)
 		{
-			throw std::exception("A probability must be between [0 , 1]");
+			throw std::runtime_error("A probability must be between [0 , 1]");
 		}
 		else
 		{
@@ -17,7 +18,7 @@ FiniteSet::FiniteSet(const std::vector<double>& inputProb, UniformGenerator* uni
 		}
 	}
 	if (sumProba != 1)
-		throw std::exception("The sum of probabilities must be equal to 1");
+		throw std::runtime_error("The sum of probabilities must be equal to 1");
 
 	Probabilities = inputProb;
 }

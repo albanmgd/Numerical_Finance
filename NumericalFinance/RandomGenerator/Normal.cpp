@@ -1,11 +1,12 @@
 #include "Normal.h"
+#include <stdexcept>
 
 const long double PI = 3.141592653589793238L;
 
 Normal::Normal(double inputMu, double inputSigma, UniformGenerator* unif) : Mu(inputMu), ContinuousGenerator(inputMu, inputSigma* inputSigma, unif)
 {
 	if (inputSigma < 0)
-		throw std::exception("The variance must be strictly positive for Normal distribution");
+		throw std::runtime_error("The variance must be strictly positive for Normal distribution");
 	Sigma = inputSigma;
 }
 
@@ -49,9 +50,9 @@ double NormalBoxMuller::Generate()
 }
 double NormalCLT::Generate()
 {
-	throw std::exception("The Central Limit Theorem method is not implemented yet for Normal distribution");
+	throw std::runtime_error("The Central Limit Theorem method is not implemented yet for Normal distribution");
 }
 double NormalRejectionSampling::Generate()
 {
-	throw std::exception("The rejection sampling method is not implemented yet for Normal distribution");
+	throw std::runtime_error("The rejection sampling method is not implemented yet for Normal distribution");
 }

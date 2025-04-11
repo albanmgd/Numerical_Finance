@@ -1,9 +1,9 @@
 #include "Poisson.h"
-
+#include <stdexcept>
 Poisson::Poisson(double lambda, UniformGenerator* unif) : Lambda(lambda), DiscreteGenerator(lambda, lambda, unif)
 {
 	if (lambda <= 0)
-		throw std::exception("Lambda must be strictly positive for Poisson distribution");
+		throw std::runtime_error("Lambda must be strictly positive for Poisson distribution");
 	Lambda = lambda;
 }
 
@@ -21,7 +21,7 @@ PoissonFirstAlgo::PoissonFirstAlgo(double lambda, UniformGenerator* unif) : Pois
 
 double PoissonFirstAlgo::Generate()
 {
-	throw std::exception("The first algorithm is not implemented yet for Poisson distribution");
+	throw std::runtime_error("The first algorithm is not implemented yet for Poisson distribution");
 }
 
 PoissonSecondAlgo::PoissonSecondAlgo(double lambda, UniformGenerator* unif) : Poisson(lambda, unif)
@@ -29,5 +29,5 @@ PoissonSecondAlgo::PoissonSecondAlgo(double lambda, UniformGenerator* unif) : Po
 
 double PoissonSecondAlgo::Generate()
 {
-	throw std::exception("The second algorithm is not implemented yet for Poisson distribution");
+	throw std::runtime_error("The second algorithm is not implemented yet for Poisson distribution");
 }

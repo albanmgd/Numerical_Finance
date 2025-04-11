@@ -1,9 +1,9 @@
 #include "Exponential.h"
-
+#include <stdexcept>
 Exponential::Exponential(double inputLambda, UniformGenerator* unif) : ContinuousGenerator(1./inputLambda, 1./(inputLambda* inputLambda), unif)
 {
 	if (inputLambda <= 0)
-		throw std::exception("Lambda must be strictly positive for Exponential distribution");
+		throw std::runtime_error("Lambda must be strictly positive for Exponential distribution");
 	Lambda = inputLambda;
 }
 
@@ -22,5 +22,5 @@ double ExponentialInverseDistribution::Generate()
 
 double ExponentialRejectionSampling::Generate()
 {
-	throw std::exception("The rejection sampling method is not implemented yet for Exponential distribution");
+	throw std::runtime_error("The rejection sampling method is not implemented yet for Exponential distribution");
 }
