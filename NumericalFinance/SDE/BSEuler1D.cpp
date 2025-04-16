@@ -20,7 +20,6 @@ void BSEuler1D::Simulate(double startTime, double endTime, size_t nbSteps, bool 
 
 	if (antitheticRV){
 		// we create a new antithetic path
-
 		AntitheticPath = new SinglePath(startTime, endTime, nbSteps);
 		AntitheticPath->AddValue(Spot);
 		lastInsertedAntithetic = Spot;
