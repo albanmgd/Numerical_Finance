@@ -11,7 +11,7 @@ BSEulerND::~BSEulerND()
 {
 }
 
-void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps)
+void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV)
 {
 
     SimBrownianND -> Simulate(startTime, endTime, nbSteps);

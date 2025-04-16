@@ -11,7 +11,7 @@ protected:
 
 public:
     BSEulerND(Normal* Gen, int dim, vector<double> spots, double rate, vector<double> vols, vector<vector<double>>* correls);
-    void Simulate(double startTime, double endTime, size_t nbSteps);
+    void Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV);
     ~BSEulerND();
 };
 
