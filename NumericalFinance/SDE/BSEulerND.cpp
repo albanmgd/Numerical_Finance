@@ -17,7 +17,10 @@ void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool 
     SimBrownianND -> Simulate(startTime, endTime, nbSteps);
     double dt = (endTime - startTime) / nbSteps;
 
-    if(Paths.size() > 0) Paths.clear(); /* Deleting already existing paths if any */
+    /// we delete all existing paths
+    for (SinglePath* path : Paths)
+        delete path;
+    Paths.clear();
 
     for (size_t d=0; d < Dimension; d++) {
         SinglePath *AssetPath = new SinglePath(startTime, endTime, nbSteps);
@@ -25,13 +28,34 @@ void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool 
         double Vol = Vols[d];
         AssetPath->AddValue(Spot);
         double lastInserted = Spot;
+
+        //antithetic 
+        SinglePath* AntitheticPath = nullptr;
+        double lastInsertedAntithetic = 0.0;
+        if (antitheticRV){
+            AntitheticPath = new SinglePath(startTime, endTime, nbSteps);
+            AntitheticPath->AddValue(Spot);
+            lastInsertedAntithetic = Spot;
+        }
+
         for (size_t i=0; i < nbSteps; ++i) {
             double CorrelatedBM = SimBrownianND -> GetPath(d)->GetValue(i * dt);
             double nextValue = lastInserted
                                + lastInserted * (Rate * dt + Vol * CorrelatedBM);
             AssetPath->AddValue(nextValue);
             lastInserted = nextValue;
+
+            //antithetic 
+            if (antitheticRV){
+                // we use -CorrelatedBM
+                double nextValueAntithetic = lastInsertedAntithetic 
+                + lastInsertedAntithetic * (Rate * dt - Vol * CorrelatedBM);
+                AntitheticPath->AddValue(nextValueAntithetic);
+                lastInsertedAntithetic = nextValueAntithetic;
+            }
         }
         Paths.push_back(AssetPath);
+        if (antitheticRV && AntitheticPath)
+            Paths.push_back(AntitheticPath);
     }
 }
