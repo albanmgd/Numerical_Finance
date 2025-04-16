@@ -8,6 +8,7 @@
 #include "../RandomGenerator/Exponential.h"
 #include "../RandomGenerator/Normal.h"
 #include "../RandomGenerator/Poisson.h"
+#include "../RandomGenerator/PAdic.h"
 #include "../PDE/PDEGrid2D.h"
 #include "../SDE/BlackScholes1D.h"
 #include "../SDE/BSEuler1D.h"
@@ -19,7 +20,7 @@ void TestRandom();
 void TestSDE();
 void TestBrownianND();
 void TestBSEulerND();
-
+void TestPAdic();
 
 int main()
 {
@@ -27,7 +28,8 @@ int main()
 //    TestPDE();
 //    TestSDE();
 //    TestBrownianND();
-    TestBSEulerND();
+//    TestBSEulerND();
+    TestPAdic();
 }
 
 void TestRandom()
@@ -208,4 +210,12 @@ void TestBSEulerND(){
     end = clock();
     cout << "The price of the European Basket Call is : " << Price << " found in "
     << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+}
+
+void TestPAdic(){
+    /* Testing the example of the course */
+    double a = 0.123333333;
+    double b = 0.412777777;
+    PAdic pAdicDecomposition = PAdic(10);
+    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(&a, &b);
 }
