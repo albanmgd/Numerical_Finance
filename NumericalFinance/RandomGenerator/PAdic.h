@@ -1,10 +1,8 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <iomanip>
-
-#include <vector>
-#include <cmath>
 #include <stdexcept>
 
 class PAdic {

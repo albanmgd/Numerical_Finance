@@ -22,7 +22,7 @@ void TestBrownianND();
 void TestBSEulerND();
 void TestPAdic();
 
-int main()
+/*int main()
 {
 //    TestRandom();
 //    TestPDE();
@@ -30,7 +30,7 @@ int main()
 //    TestBrownianND();
 //    TestBSEulerND();
     TestPAdic();
-}
+}*/
 
 void TestRandom()
 {

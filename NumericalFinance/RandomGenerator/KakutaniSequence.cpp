@@ -1,14 +1,14 @@
-#pragma once
 #include "KakutaniSequence.h"
 
-KakutaniSequence::KakutaniSequence(PAdic* adicDecomp, int dim, int length):
-Dimension(dim), Length(length), pAdicDecomp(adicDecomp)
+KakutaniSequence::KakutaniSequence(int dim, int length):
+Dimension(dim), Length(length), localD(0), localN(0)
 {
-    firstDPrimeNumbers = first_dprimes(); /* Computed only once */
+    firstDPrimeNumbers = firstDPrimes(); /* Computed only once */
+    Sequence = createKakutaniSequence();
 }
 
 // Return the first d prime numbers
-std::vector<int> KakutaniSequence::first_dprimes() {
+std::vector<int> KakutaniSequence::firstDPrimes() {
     std::vector<int> primes;
     int num = 2;
     while (primes.size() < Dimension) {
@@ -25,7 +25,7 @@ std::vector<int> KakutaniSequence::first_dprimes() {
     return primes;
 }
 
-std::vector<std::vector<double>> KakutaniSequence::Generate() {
+std::vector<std::vector<double>> KakutaniSequence::createKakutaniSequence() {
     std::vector<std::vector<double>> seq(Length, std::vector<double>(Dimension));
     std::vector<double> x(Dimension), y(Dimension);
 
@@ -39,6 +39,7 @@ std::vector<std::vector<double>> KakutaniSequence::Generate() {
     for (int t = 0; t < Length; ++t) {
         for (int i = 0; i < Dimension; ++i) {
             int p = firstDPrimeNumbers[i];
+            PAdic* pAdicDecomp = new PAdic(p);
             double xi = x[i];
             for (int k = 0; k < t; ++k)
                 xi = pAdicDecomp -> add(&xi, &y[i]);  // Apply T^t
@@ -46,4 +47,24 @@ std::vector<std::vector<double>> KakutaniSequence::Generate() {
         }
     }
     return seq;
+}
+
+double KakutaniSequence::Generate() {
+    /* Once we're here we have our n sequences of d random numbers already computed. We just need to send return one of them in the
+     * correct order */
+    double output;
+    if ((localD == Dimension) and (localN == Length)){
+        throw std::runtime_error("Please increase the dimensions of the sequence. All generated numbers have been returned.");
+    }
+    else{
+        output = Sequence[localD][localN];
+        if (localD == Dimension){
+            localD = 0;
+            localN += 1;
+        }
+        else{
+            localD += 1;
+        }
+    }
+    return output;
 }

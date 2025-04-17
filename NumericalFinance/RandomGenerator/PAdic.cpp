@@ -1,4 +1,3 @@
-#pragma once
 #include "PAdic.h"
 #include <vector>
 
