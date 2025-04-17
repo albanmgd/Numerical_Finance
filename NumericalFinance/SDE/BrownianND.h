@@ -11,5 +11,5 @@ protected:
 public:
     BrownianND (RandomGenerator* Gen , int dim, vector <vector<double>>* Corr);
     std::vector<std::vector<double>> getCholeskyDecomposition( vector < vector<double> >* Corr);
-    void Simulate (double startTime, double endTime, size_t nbSteps);
+    void Simulate (double startTime, double endTime, size_t nbSteps, bool antitheticRV=false);
 };

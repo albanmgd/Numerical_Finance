@@ -12,5 +12,5 @@ protected:
 public:
     KakutaniSequence(PAdic* adicDecomp, int dim, int length);
     std::vector<int> first_dprimes();
-    std::vector<std::vector<double>> Generate();
+    double Generate();
 };

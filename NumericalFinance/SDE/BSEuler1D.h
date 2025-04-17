@@ -4,7 +4,7 @@ class BSEuler1D : public BlackScholes1D
 {
 public:
 	BSEuler1D(Normal* Gen, double spot, double rate, double vol);
-	void Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV);
+	void Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV=false);
 	~BSEuler1D();
 	// std::vector<SinglePath*> Paths; // not sure ?
 };

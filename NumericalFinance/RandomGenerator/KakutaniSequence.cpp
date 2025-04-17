@@ -25,25 +25,6 @@ std::vector<int> KakutaniSequence::first_dprimes() {
     return primes;
 }
 
-std::vector<std::vector<double>> KakutaniSequence::Generate() {
-    std::vector<std::vector<double>> seq(Length, std::vector<double>(Dimension));
-    std::vector<double> x(Dimension), y(Dimension);
-
-    // Set x_i = 1/p_i, y_i = 1/p_i + 1/p_i^2
-    for (int i = 0; i < Dimension; ++i) {
-        int p = firstDPrimeNumbers[i];
-        x[i] = 1.0 / p;
-        y[i] = 1.0 / p + 1.0 / (p * p);
-    }
-
-    for (int t = 0; t < Length; ++t) {
-        for (int i = 0; i < Dimension; ++i) {
-            int p = firstDPrimeNumbers[i];
-            double xi = x[i];
-            for (int k = 0; k < t; ++k)
-                xi = pAdicDecomp -> add(&xi, &y[i]);  // Apply T^t
-            seq[t][i] = xi;
-        }
-    }
-    return seq;
+double KakutaniSequence::Generate() {
+    return 1.0;
 }

@@ -28,8 +28,8 @@ int main()
 //    TestPDE();
 //    TestSDE();
 //    TestBrownianND();
-//    TestBSEulerND();
-    TestPAdic();
+    TestBSEulerND();
+//    TestPAdic();
 }
 
 void TestRandom()
@@ -173,6 +173,7 @@ void TestBrownianND(){
 };
 
 void TestBSEulerND(){
+    /* Used to test for both antithetic or not RV */
     cout << "Starting the MC Simulation ..." << endl;
     clock_t start, end;
     start = clock();
@@ -181,7 +182,7 @@ void TestBSEulerND(){
     double T = 1.; // Maturity
     double K = 65;
     size_t nbSteps = 365;
-    size_t nbSims = 1e5;
+    size_t nbSims = 1e4;
     std::vector<double> Spots = {100, 50, 60};
     std::vector<double> Vols = {0.10, 0.25, 0.16};
     double Rate = 0.05;
@@ -200,7 +201,7 @@ void TestBSEulerND(){
     double Payoffs = 0.0;
     for (size_t nSimul=0; nSimul < nbSims; nSimul++){
         double LocalPayoff = 0.0;
-        TestScheme.Simulate(0, T, nbSteps);
+        TestScheme.Simulate(0, T, nbSteps, false);
         for (size_t d=0; d < dim; d++){
             LocalPayoff += Weights[d] * TestScheme.GetPath(d)->GetValue(T);
         }

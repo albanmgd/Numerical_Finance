@@ -13,7 +13,6 @@ BSEulerND::~BSEulerND()
 
 void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV)
 {
-
     SimBrownianND -> Simulate(startTime, endTime, nbSteps);
     double dt = (endTime - startTime) / nbSteps;
 
@@ -29,8 +28,8 @@ void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool 
         AssetPath->AddValue(Spot);
         double lastInserted = Spot;
 
-        //antithetic 
-        SinglePath* AntitheticPath = nullptr;
+        //antithetic
+        SinglePath *AntitheticPath = nullptr;
         double lastInsertedAntithetic = 0.0;
         if (antitheticRV){
             AntitheticPath = new SinglePath(startTime, endTime, nbSteps);
