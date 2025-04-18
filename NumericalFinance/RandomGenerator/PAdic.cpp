@@ -17,7 +17,7 @@ std::vector<int> PAdic::double_to_padic(double x){
     return digits;
 }
 
-float PAdic::padic_to_double(std::vector<int>* digits) {
+double PAdic::padic_to_double(std::vector<int>* digits) {
     double result = 0.0;
     double weight = 1.0 / Base;
     for (int digit : *digits) {
@@ -27,9 +27,9 @@ float PAdic::padic_to_double(std::vector<int>* digits) {
     return result;
 }
 
-float PAdic::add(double* firstNb, double* secondNb){
-    std::vector<int> pDecompFirst = double_to_padic(*firstNb);
-    std::vector<int> pDecompSecond = double_to_padic(*secondNb);
+double PAdic::add(double firstNb, double secondNb){
+    std::vector<int> pDecompFirst = double_to_padic(firstNb);
+    std::vector<int> pDecompSecond = double_to_padic(secondNb);
 
     std::vector<int> result;
     int carry = 0;

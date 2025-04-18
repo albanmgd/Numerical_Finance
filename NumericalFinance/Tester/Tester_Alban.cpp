@@ -5,32 +5,29 @@
 #include "../RandomGenerator/Normal.h"
 #include "../SDE/BrownianND.h"
 #include "../SDE/BSEulerND.h"
-#include "../RandomGenerator/PAdic.h"
 #include "../RandomGenerator/KakutaniSequence.h"
 
-void TestPAdic();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 
 int main()
 {
-//    TestRandom();
-//    TestPDE();
-//    TestSDE();
-//    TestBrownianND();
-//    TestBSEulerND();
-//    TestPAdic();
-//    TestKakutaniSequence();
-    TestVarianceReductionKakutaniSequence();
+
+    TestKakutaniSequence();
+//    TestVarianceReductionKakutaniSequence();
 }
 
 void TestKakutaniSequence(){
+    int testNbSims = 3;
     int testDim = 3; /* testing with d assets over 100 timesteps */
-    int testN = 100;
+    int testN = 5;
     KakutaniSequence TestKakutaniSq = KakutaniSequence(testDim, testN);
-    for (size_t n=0; n < testN; n++){
-        for (size_t d=0; d < testDim; d++){
-            std::cout << "For time step: " << n << " and dim: " << d << " generated RV is: " << TestKakutaniSq.Generate() << std::endl;
+    for (size_t NbSim=0; NbSim < testNbSims; NbSim ++) {
+        for (size_t n = 0; n < testN; n++) {
+            for (size_t d = 0; d < testDim; d++) {
+                std::cout << "Simulation: " << NbSim << ", time step: " << n << " and dim: " << d << " generated RV is: "
+                          << TestKakutaniSq.Generate() << std::endl;
+            }
         }
     }
 };

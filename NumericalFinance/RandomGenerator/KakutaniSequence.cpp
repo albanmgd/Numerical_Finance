@@ -3,8 +3,9 @@
 KakutaniSequence::KakutaniSequence(int dim, int length):
 Dimension(dim), Length(length), localD(0), localN(0)
 {
+    countNbSim = 0;
     firstDPrimeNumbers = firstDPrimes(); /* Computed only once */
-    Sequence = createKakutaniSequence();
+    createKakutaniSequence(countNbSim);
 }
 
 // Return the first d prime numbers
@@ -25,7 +26,7 @@ std::vector<int> KakutaniSequence::firstDPrimes() {
     return primes;
 }
 
-std::vector<std::vector<double>> KakutaniSequence::createKakutaniSequence() {
+void KakutaniSequence::KakutaniSequence::createKakutaniSequence(int shiftIndex) {
     std::vector<std::vector<double>> seq(Length, std::vector<double>(Dimension));
     std::vector<double> x(Dimension), y(Dimension);
 
@@ -41,30 +42,33 @@ std::vector<std::vector<double>> KakutaniSequence::createKakutaniSequence() {
             int p = firstDPrimeNumbers[i];
             PAdic* pAdicDecomp = new PAdic(p);
             double xi = x[i];
-            for (int k = 0; k < t; ++k)
-                xi = pAdicDecomp -> add(&xi, &y[i]);  // Apply T^t
+            int tShifted = t + shiftIndex;  // Apply the shift
+            for (int k = 0; k < tShifted; ++k)
+                xi = pAdicDecomp->add(xi, y[i]);  // Apply T^{tShifted}
             seq[t][i] = xi;
+            delete pAdicDecomp; // Avoid memory leak
         }
     }
-    return seq;
+    Sequence = seq;
 }
 
 double KakutaniSequence::Generate() {
-    /* Once we're here we have our n sequences of d random numbers already computed. We just need to send return one of them in the
-     * correct order */
-    double output;
-    if ((localD == Dimension) and (localN == Length)){
-        throw std::runtime_error("Please increase the dimensions of the sequence. All generated numbers have been returned.");
+    /* Once we're here we already have one a n*d matrix of RVs.
+     * We just need to send return one of them in the correct order */
+    if ((localD == Dimension - 1) and (localN == Length - 1)){ /* we have n timesteps on d dimensions but index starts at 0 ...*/
+        /* Means that I've already returned the full n * d matrix generated for a simulation */
+        localD = 0; localN = 0;
+        countNbSim += 1;
+        createKakutaniSequence(countNbSim);
+    }
+
+    double output = Sequence[localN][localD];
+    if (localD == Dimension - 1){
+        localD = 0;
+        localN += 1;
     }
     else{
-        output = Sequence[localD][localN];
-        if (localD == Dimension){
-            localD = 0;
-            localN += 1;
-        }
-        else{
-            localD += 1;
-        }
+        localD += 1;
     }
     return output;
 }
