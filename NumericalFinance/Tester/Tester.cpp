@@ -22,7 +22,7 @@ void TestBrownianND();
 void TestBSEulerND();
 void TestPAdic();
 
-int main()
+/*int main()
 {
 //    TestRandom();
 //    TestPDE();
@@ -30,7 +30,7 @@ int main()
 //    TestBrownianND();
 //    TestBSEulerND();
     TestPAdic();
-}
+}*/
 
 void TestRandom()
 {
@@ -217,5 +217,5 @@ void TestPAdic(){
     double a = 0.123333333;
     double b = 0.412777777;
     PAdic pAdicDecomposition = PAdic(10);
-    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(&a, &b);
+    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(a, b);
 }
