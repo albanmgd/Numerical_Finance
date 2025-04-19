@@ -10,12 +10,12 @@
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 
-int main()
+/*int main()
 {
 
     TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
-}
+}*/
 
 void TestKakutaniSequence(){
     int testNbSims = 3;
