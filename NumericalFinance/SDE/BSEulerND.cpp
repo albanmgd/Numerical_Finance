@@ -5,6 +5,7 @@ BSEulerND::BSEulerND(Normal* Gen, int dim, vector <double> spots, double rate, v
         BlackScholesND(Gen, spots, rate, vols), Dimension(dim), Correls(correls)
 {
     SimBrownianND = new BrownianND(Gen, dim, correls);
+    HasToBeResimulated = true;
 }
 
 BSEulerND::~BSEulerND()
@@ -13,48 +14,65 @@ BSEulerND::~BSEulerND()
 
 void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV)
 {
-    SimBrownianND -> Simulate(startTime, endTime, nbSteps);
-    double dt = (endTime - startTime) / nbSteps;
+    /*Main idea is: when we simulate the 'classic' paths, we also simulate antithetic paths if antitheticRV.
+     * The next time we call this function, if antitheticRV then we return the previously simulated antithetic paths.
+     *
+     * */
 
-    /// we delete all existing paths
-    for (SinglePath* path : Paths)
+    // we delete all existing paths in every case since we'll either re-simulate them or re-write them
+    for (SinglePath *path: Paths)
         delete path;
     Paths.clear();
 
-    for (size_t d=0; d < Dimension; d++) {
-        SinglePath *AssetPath = new SinglePath(startTime, endTime, nbSteps);
-        double Spot = Spots[d];
-        double Vol = Vols[d];
-        AssetPath->AddValue(Spot);
-        double lastInserted = Spot;
+    if (HasToBeResimulated) {
+        SimBrownianND->Simulate(startTime, endTime, nbSteps);
+        double dt = (endTime - startTime) / nbSteps;
 
-        //antithetic
-        SinglePath *AntitheticPath = nullptr;
-        double lastInsertedAntithetic = 0.0;
-        if (antitheticRV){
-            AntitheticPath = new SinglePath(startTime, endTime, nbSteps);
-            AntitheticPath->AddValue(Spot);
-            lastInsertedAntithetic = Spot;
-        }
+        AntitheticPaths.clear();
+        for (size_t d = 0; d < Dimension; d++) {
+            SinglePath *AssetPath = new SinglePath(startTime, endTime, nbSteps);
+            double Spot = Spots[d];
+            double Vol = Vols[d];
+            AssetPath->AddValue(Spot);
+            double lastInserted = Spot;
 
-        for (size_t i=0; i < nbSteps; ++i) {
-            double CorrelatedBM = SimBrownianND -> GetPath(d)->GetValue(i * dt);
-            double nextValue = lastInserted
-                               + lastInserted * (Rate * dt + Vol * CorrelatedBM);
-            AssetPath->AddValue(nextValue);
-            lastInserted = nextValue;
+            //antithetic
+            SinglePath *AntitheticPath = nullptr;
+            double lastInsertedAntithetic = 0.0;
+            if (antitheticRV) {
+                AntitheticPath = new SinglePath(startTime, endTime, nbSteps);
+                AntitheticPath->AddValue(Spot);
+                lastInsertedAntithetic = Spot;
+            }
 
-            //antithetic 
-            if (antitheticRV){
-                // we use -CorrelatedBM
-                double nextValueAntithetic = lastInsertedAntithetic 
-                + lastInsertedAntithetic * (Rate * dt - Vol * CorrelatedBM);
-                AntitheticPath->AddValue(nextValueAntithetic);
-                lastInsertedAntithetic = nextValueAntithetic;
+            for (size_t i = 0; i < nbSteps; ++i) {
+                double CorrelatedBM = SimBrownianND->GetPath(d)->GetValue(i * dt);
+                double nextValue = lastInserted
+                                   + lastInserted * (Rate * dt + Vol * CorrelatedBM);
+                AssetPath->AddValue(nextValue);
+                lastInserted = nextValue;
+
+                //antithetic
+                if (antitheticRV) {
+                    // we use -CorrelatedBM
+                    double nextValueAntithetic = lastInsertedAntithetic
+                                                 + lastInsertedAntithetic * (Rate * dt - Vol * CorrelatedBM);
+                    AntitheticPath->AddValue(nextValueAntithetic);
+                    lastInsertedAntithetic = nextValueAntithetic;
+                }
+            }
+            Paths.push_back(AssetPath);
+            if (antitheticRV) {
+                AntitheticPaths.push_back(AntitheticPath);
             }
         }
-        Paths.push_back(AssetPath);
-        if (antitheticRV && AntitheticPath)
+        if (antitheticRV)
+            HasToBeResimulated = false; /* could be in the loop but would lead to multiple affectations */
+    }
+    else if ((~HasToBeResimulated) and (antitheticRV)){
+        for (SinglePath *AntitheticPath: AntitheticPaths){
             Paths.push_back(AntitheticPath);
+        }
+        HasToBeResimulated = true;
     }
 }

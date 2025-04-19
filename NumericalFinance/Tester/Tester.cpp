@@ -29,7 +29,7 @@ int main()
 //    TestSDE();
 //    TestBrownianND();
     TestBSEulerND();
-//    TestPAdic();
+    TestPAdic();
 }
 
 void TestRandom()
@@ -173,7 +173,6 @@ void TestBrownianND(){
 };
 
 void TestBSEulerND(){
-    /* Used to test for both antithetic or not RV */
     cout << "Starting the MC Simulation ..." << endl;
     clock_t start, end;
     start = clock();
@@ -218,5 +217,5 @@ void TestPAdic(){
     double a = 0.123333333;
     double b = 0.412777777;
     PAdic pAdicDecomposition = PAdic(10);
-    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(&a, &b);
+    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(a, b);
 }
