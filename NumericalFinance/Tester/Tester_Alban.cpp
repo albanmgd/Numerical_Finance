@@ -20,7 +20,7 @@ int main()
     TestBSEulerND();
 //    TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
-    TestLongstaffSchwarz();
+//    TestLongstaffSchwarz();
 }
 
 void TestBSEulerND(){
@@ -33,12 +33,12 @@ void TestBSEulerND(){
     double K = 65;
     size_t nbSteps = 365;
     size_t nbSims = 1e4;
-    std::vector<double> Spots = {100, 50, 60};
-    std::vector<double> Vols = {0.10, 0.25, 0.16};
+    vector<double> Spots = {100, 50, 60};
+    vector<double> Vols = {0.10, 0.25, 0.16};
     double Rate = 0.05;
-    std::vector<double> Weights = {0.10, 0.7, 0.2};
+    vector<double> Weights = {0.10, 0.7, 0.2};
 
-    std::vector<std::vector<double>> TestCorrelMatrix(dim, std::vector<double>(dim, 0.1));
+    vector<vector<double>> TestCorrelMatrix(dim, vector<double>(dim, 0.1));
     for (int i = 0; i < dim; ++i) {
         TestCorrelMatrix[i][i] = 1.0;
     }
@@ -47,7 +47,8 @@ void TestBSEulerND(){
     NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
 
     BSEulerND TestScheme = BSEulerND(NormBox, dim, Spots, Rate, Vols, &TestCorrelMatrix);
-
+    double TheoreticalPrice = TestScheme.PriceBasketCallOption(K, Weights, T, TestCorrelMatrix);
+    //cout << "The theoretical price of the European Basket Call is : " << TheoreticalPrice << endl;
     double Payoffs = 0.0;
     for (size_t nSimul=0; nSimul < nbSims; nSimul++){
         double LocalPayoff = 0.0;
@@ -59,7 +60,7 @@ void TestBSEulerND(){
     }
     double Price = exp(-Rate * T) * Payoffs / nbSims;
     end = clock();
-    cout << "The price of the European Basket Call is : " << Price << " found in "
+    cout << "The price of the European Basket Call with MC is : " << Price << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
 }
 
