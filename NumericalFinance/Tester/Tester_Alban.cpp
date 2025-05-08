@@ -43,7 +43,7 @@ void TestBSEulerND(){
     for (int i = 0; i < dim; ++i) {
         TestCorrelMatrix[i][i] = 1.0;
     }
-    bool UseControlVariate = true;
+    bool UseControlVariate = false;
 
     UniformGenerator* Unif = new EcuyerCombined();
     NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
@@ -56,7 +56,7 @@ void TestBSEulerND(){
     for (size_t nSimul=0; nSimul < nbSims; nSimul++){
         double LocalPayoff = 0.0;
         double ControlVariateLocalPayoff = 0.0;
-        TestScheme.Simulate(0, T, nbSteps, false);
+        TestScheme.Simulate(0, T, nbSteps, true);
         for (size_t d=0; d < dim; d++){
             LocalPayoff += Weights[d] * TestScheme.GetPath(d)->GetValue(T);
             ControlVariateLocalPayoff += Weights[d] * log(TestScheme.GetPath(d)->GetValue(T));
