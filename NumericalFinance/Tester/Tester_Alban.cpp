@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "../Utils/Matrix.h"
+#include "../Utils/basic_functions.h"
 #include "../RandomGenerator/Normal.h"
 #include "../SDE/BrownianND.h"
 #include "../SDE/BSEulerND.h"
@@ -42,25 +43,36 @@ void TestBSEulerND(){
     for (int i = 0; i < dim; ++i) {
         TestCorrelMatrix[i][i] = 1.0;
     }
+    bool UseControlVariate = true;
 
     UniformGenerator* Unif = new EcuyerCombined();
     NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
 
     BSEulerND TestScheme = BSEulerND(NormBox, dim, Spots, Rate, Vols, &TestCorrelMatrix);
     double TheoreticalPrice = TestScheme.PriceBasketCallOption(K, Weights, T, TestCorrelMatrix);
-    //cout << "The theoretical price of the European Basket Call is : " << TheoreticalPrice << endl;
-    double Payoffs = 0.0;
+
+    vector<double> Payoffs (nbSims, 0.0);
+
     for (size_t nSimul=0; nSimul < nbSims; nSimul++){
         double LocalPayoff = 0.0;
+        double ControlVariateLocalPayoff = 0.0;
         TestScheme.Simulate(0, T, nbSteps, false);
         for (size_t d=0; d < dim; d++){
             LocalPayoff += Weights[d] * TestScheme.GetPath(d)->GetValue(T);
+            ControlVariateLocalPayoff += Weights[d] * log(TestScheme.GetPath(d)->GetValue(T));
         }
-        Payoffs += std::max<double>(LocalPayoff - K, 0.0);
+        if (UseControlVariate == false)
+            Payoffs[nSimul] = exp(-Rate * T) * max<double>(LocalPayoff - K, 0.0);
+        else
+
+            Payoffs[nSimul] =  exp(-Rate * T) * (max<double>(LocalPayoff - K, 0.0) - max<double>(exp(ControlVariateLocalPayoff) - K, 0.0)) + TheoreticalPrice;
+
     }
-    double Price = exp(-Rate * T) * Payoffs / nbSims;
     end = clock();
-    cout << "The price of the European Basket Call with MC is : " << Price << " found in "
+    cout << "The price of the European Basket Call with MC is : " << meanVector(Payoffs) << " found in "
+         << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+    end = clock();
+    cout << "The variance of the European Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
 }
 
