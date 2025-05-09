@@ -11,7 +11,8 @@ EuropeanBasketOption::EuropeanBasketOption(
         BasketOption(dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen)
 {};
 
-void EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate){
+std::vector<double> EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
+                                                    bool UseControlVariate){
     cout << "Starting the MC Simulation for the European Call..." << endl;
     clock_t start, end;
     start = clock();
@@ -22,8 +23,6 @@ void EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAnti
     vector<double> Payoffs (NbSims, 0.0);
 
     for (size_t nSimul=0; nSimul < NbSims; nSimul++){
-        cout << "Done sim " << nSimul << endl;
-
         double LocalPayoff = 0.0;
         double ControlVariateLocalPayoff = 0.0;
         TestScheme.Simulate(0, T, NbSteps, UseAntithetic);
@@ -38,11 +37,22 @@ void EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAnti
 
     }
     end = clock();
-    cout << "The price of the European Basket Call with MC is : " << meanVector(Payoffs) << " found in "
+    // storing results for output
+    double meanPrice = meanVector(Payoffs);
+    double variance = varianceVector(Payoffs);
+
+    cout << "The price of the European Basket Call with MC is : " << meanPrice << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
     end = clock();
-    cout << "The variance of the European Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
+    cout << "The variance of the European Basket Call with MC is : " << variance << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+
+    std::vector<double> results;
+    results.reserve(3);
+    results.push_back(meanPrice);
+    results.push_back(variance);
+    results.push_back(static_cast<double>(NbSims));
+    return results;
 };
 
 EuropeanBasketOption::~EuropeanBasketOption()

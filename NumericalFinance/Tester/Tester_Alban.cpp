@@ -19,14 +19,14 @@ void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 void TestLongstaffSchwarz();
 
-int main()
+/*int main()
 {
 //    TestBSEulerND();
-    TestClassImplementation();
+//    TestClassImplementation();
 //    TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
-}
+}*/
 
 void TestBSEulerND(){
     cout << "Starting the MC Simulation ..." << endl;

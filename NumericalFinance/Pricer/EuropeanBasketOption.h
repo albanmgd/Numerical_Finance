@@ -10,5 +10,7 @@ public:
                           std::vector<double> Vols, std::vector<double> Weights,
                           std::vector<std::vector<double>> Correls, Normal* Gen);
     ~EuropeanBasketOption();
-    void PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate);
+
+    std::vector<double> PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
+                                  bool UseControlVariate);
 };

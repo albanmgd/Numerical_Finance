@@ -11,7 +11,8 @@ BermudeanBasketOption::BermudeanBasketOption(
         BasketOption(dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)
         {};
 
-void BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate){
+std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
+                                                     bool UseControlVariate){
     cout << "Starting the MC Simulation for the Bermudean Call..." << endl;
     clock_t start, end;
     start = clock();
