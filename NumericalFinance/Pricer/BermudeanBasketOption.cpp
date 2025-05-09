@@ -1,8 +1,8 @@
-#include <memory>
 #include "BermudeanBasketOption.h"
 #include "../Utils/Matrix.h"
+#include "../Utils/basic_functions.h"
 #include "../SDE/BSEulerND.h"
-
+#include <memory>
 
 BermudeanBasketOption::BermudeanBasketOption(
         size_t dim, double K, double T, double Rate, std::vector<double> Spots,
@@ -12,8 +12,14 @@ BermudeanBasketOption::BermudeanBasketOption(
         {};
 
 void BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate){
+    cout << "Starting the MC Simulation for the Bermudean Call..." << endl;
+    clock_t start, end;
+    start = clock();
 
     BSEulerND TestScheme = BSEulerND(Generator, Dimension, Spots, Rate, Vols, &Correls);
+    // Computing the theoretical price in case we use the control variate - avoids multiple if tests
+    double TheoreticalPrice = TestScheme.PriceBasketCallOption(K, Weights, T, Correls);
+
     /* Begin by generating directly nbSim asset paths for the d assets & computing the basket values associated */
     double delta_t = T / NbSteps;
     vector<vector<std::unique_ptr<SinglePath>>> AllAssetPaths(NbSims);
@@ -39,25 +45,25 @@ void BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAnt
     // Backward induction for the stopping times
     vector<vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, T));
 
-    // Looping through time, starting at T
-    for (size_t i=(NbSteps - 1); i >= 1; i--){
+    // Looping through time
+    for (size_t i=(NbSteps - 2); i >= 1; i--){
         std::vector<std::vector<double>> basisVectors(NbSims, std::vector<double>(L, 0.0));
         double currentTimestep = i * delta_t; double previousTimestep = (i + 1) * delta_t; /* going backward */
         // Initializing the right hand part of the sum to optimize
         std::vector<double> basisDecompositionVector (L, 0.0);
         // Going through all the simulations for one time-step
         for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
-            double basketValue = basketValues[nSimul]->GetValue(currentTimestep);
             double previousStoppingTime = stoppingTimes[nSimul][i + 1];
-            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(basketValue - K, 0);
+            double currentBasketValue = basketValues[nSimul]->GetValue(currentTimestep);
+            double pastStoppingTimeBasketValue = basketValues[nSimul]->GetValue(previousStoppingTime);
+            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(pastStoppingTimeBasketValue - K, 0);
             /* Constructing the P vector */
             for (size_t l=0; l < L; l++){
-                double basisScalar= pow(basketValue, l);
+                double basisScalar= pow(currentBasketValue, l);
                 basisVectors[nSimul][l] = basisScalar;
                 basisDecompositionVector[l] += mulFactor * basisScalar;
             }
         }
-        cout << "At i: " <<i << endl;
         // Can now construct the Phi Matrix
         Matrix Phi = Matrix(basisVectors);
         Matrix H = Matrix(Phi.getTranspose() * Phi);
@@ -85,11 +91,29 @@ void BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAnt
         }
     }
     // Finally we can value the option
-    double payoff = 0.0;
+    vector<double> Payoffs(NbSims, 0.0);
     for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {
         double stoppingTimeSimul = stoppingTimes[nSimul][0];
-        payoff += exp(- Rate * stoppingTimeSimul) * std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);
+        if (!UseControlVariate)
+            Payoffs[nSimul] = exp(-Rate * stoppingTimeSimul) *
+                              std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);
+        else {
+            double ControlVariateLocalPayoff = 0.0;
+            for (size_t d = 0; d < Dimension; d++) {
+                ControlVariateLocalPayoff += Weights[d] * log(AllAssetPaths[nSimul][d]->GetValue(T));
+            }
+            Payoffs[nSimul] = TheoreticalPrice + exp(-Rate * stoppingTimeSimul) * (std::max<double>(
+                    basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0) - max<double>(
+                    exp(ControlVariateLocalPayoff) - K, 0.0));
+
+        }
     }
+    end = clock();
+    cout << "The price of the Bermudean Basket Call with MC is : " << meanVector(Payoffs) << " found in "
+         << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+    end = clock();
+    cout << "The variance of the Bermudean Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
+         << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
 };
 
 BermudeanBasketOption::~BermudeanBasketOption()

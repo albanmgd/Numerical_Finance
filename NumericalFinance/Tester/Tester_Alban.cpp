@@ -11,17 +11,18 @@
 #include "../RandomGenerator/KakutaniSequence.h"
 #include "../RandomGenerator/EcuyerCombined.h"
 #include "../Pricer/EuropeanBasketOption.h"
+#include "../Pricer/BermudeanBasketOption.h"
 
 void TestBSEulerND();
-void TestClasImplementationBSEUlerND();
+void TestClassImplementation();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 void TestLongstaffSchwarz();
 
 int main()
 {
-    TestBSEulerND();
-    TestClasImplementationBSEUlerND();
+//    TestBSEulerND();
+    TestClassImplementation();
 //    TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
@@ -78,30 +79,6 @@ void TestBSEulerND(){
     cout << "The variance of the European Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
 }
-
-void TestClasImplementationBSEUlerND(){
-    int dim = 3;
-    double T = 1.; // Maturity
-    double K = 65;
-    size_t nbSteps = 365;
-    size_t nbSims = 1e4;
-    vector<double> Spots = {100, 50, 60};
-    vector<double> Vols = {0.10, 0.25, 0.16};
-    double Rate = 0.05;
-    vector<double> Weights = {0.10, 0.7, 0.2};
-
-    vector<vector<double>> TestCorrelMatrix(dim, vector<double>(dim, 0.1));
-    for (int i = 0; i < dim; ++i) {
-        TestCorrelMatrix[i][i] = 1.0;
-    }
-    bool UseControlVariate = false;
-    UniformGenerator* Unif = new EcuyerCombined();
-    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
-
-    EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
-    TestCorrelMatrix, NormBox);
-    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
-};
 
 void TestKakutaniSequence(){
     int testNbSims = 3;
@@ -257,4 +234,36 @@ void TestLongstaffSchwarz(){
         payoff += exp(- Rate * stoppingTimeSimul) * std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);
     }
     cout << "The price of the Bermudean Basket Call is : " << payoff / nbSims << endl;
+};
+
+void TestClassImplementation(){
+    int dim = 3;
+    double T = 1.; // Maturity
+    double K = 60;
+    size_t nbSteps = 365;
+    size_t nbSims = 1e3;
+    vector<double> Spots = {100, 50, 60};
+    vector<double> Vols = {0.10, 0.25, 0.16};
+    double Rate = 0.05;
+    vector<double> Weights = {0.10, 0.7, 0.2};
+
+    vector<vector<double>> TestCorrelMatrix(dim, vector<double>(dim, 0.1));
+    for (int i = 0; i < dim; ++i) {
+        TestCorrelMatrix[i][i] = 1.0;
+    }
+
+    // UniformGenerator* Unif = new EcuyerCombined();
+    UniformGenerator* Unif = new KakutaniSequence(dim, nbSteps);
+    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
+
+    // Testing for the european option
+    EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
+                                                  TestCorrelMatrix, NormBox);
+    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
+
+    // Testing for the bermudean option
+    size_t L = 3;
+    BermudeanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
+                                                   TestCorrelMatrix, NormBox, L);
+    testBermudeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
 };

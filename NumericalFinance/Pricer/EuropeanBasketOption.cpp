@@ -1,10 +1,8 @@
 #include "EuropeanBasketOption.h"
 #include "../Utils/basic_functions.h"
-
-#include <memory>
 #include "../Utils/Matrix.h"
 #include "../SDE/BSEulerND.h"
-
+#include <memory>
 
 EuropeanBasketOption::EuropeanBasketOption(
         size_t dim, double K, double T, double Rate, std::vector<double> Spots,
@@ -14,7 +12,7 @@ EuropeanBasketOption::EuropeanBasketOption(
 {};
 
 void EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate){
-    cout << "Starting the MC Simulation ..." << endl;
+    cout << "Starting the MC Simulation for the European Call..." << endl;
     clock_t start, end;
     start = clock();
 
@@ -24,17 +22,18 @@ void EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAnti
     vector<double> Payoffs (NbSims, 0.0);
 
     for (size_t nSimul=0; nSimul < NbSims; nSimul++){
+        cout << "Done sim " << nSimul << endl;
+
         double LocalPayoff = 0.0;
         double ControlVariateLocalPayoff = 0.0;
-        TestScheme.Simulate(0, T, NbSteps, true);
+        TestScheme.Simulate(0, T, NbSteps, UseAntithetic);
         for (size_t d=0; d < Dimension; d++){
             LocalPayoff += Weights[d] * TestScheme.GetPath(d)->GetValue(T);
             ControlVariateLocalPayoff += Weights[d] * log(TestScheme.GetPath(d)->GetValue(T));
         }
-        if (UseControlVariate == false)
+        if (!UseControlVariate)
             Payoffs[nSimul] = exp(-Rate * T) * max<double>(LocalPayoff - K, 0.0);
         else
-
             Payoffs[nSimul] =  exp(-Rate * T) * (max<double>(LocalPayoff - K, 0.0) - max<double>(exp(ControlVariateLocalPayoff) - K, 0.0)) + TheoreticalPrice;
 
     }
