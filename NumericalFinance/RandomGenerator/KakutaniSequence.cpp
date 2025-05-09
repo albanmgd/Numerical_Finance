@@ -36,19 +36,24 @@ void KakutaniSequence::KakutaniSequence::createKakutaniSequence(int shiftIndex) 
         x[i] = 1.0 / p;
         y[i] = 1.0 / p + 1.0 / (p * p);
     }
+    std::vector<PAdic*> pAdicObjects(Dimension);
+    // Creating the vector of p-adic objects once outside the loop
+    for (int i = 0; i < Dimension; ++i)
+        pAdicObjects[i] = new PAdic(firstDPrimeNumbers[i]);
 
     for (int t = 0; t < Length; ++t) {
         for (int i = 0; i < Dimension; ++i) {
-            int p = firstDPrimeNumbers[i];
-            PAdic* pAdicDecomp = new PAdic(p);
+            PAdic* pAdicDecomp = pAdicObjects[i];
             double xi = x[i];
             int tShifted = t + shiftIndex;  // Apply the shift
-            for (int k = 0; k < tShifted; ++k)
+            for (int k = 0; k < tShifted; k++)
                 xi = pAdicDecomp->add(xi, y[i]);  // Apply T^{tShifted}
             seq[t][i] = xi;
-            delete pAdicDecomp; // Avoid memory leak
         }
     }
+    // avoid memory leaks
+    for (int i = 0; i < Dimension; ++i)
+        delete pAdicObjects[i];
     Sequence = seq;
 }
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-#include "EuropeanBasketOption.h"
+#include "../Pricer/EuropeanBasketOption.h"
 #include "../SDE/BlackScholesND.h"
 #include "../RandomGenerator/LinearCongruential.h"
 #include "../RandomGenerator/EcuyerCombined.h"
@@ -26,17 +26,17 @@ void TestEulerPricer();
 void BasicMC();
 void TestNumberSim();
 
-int main() {
+/*int main() {
 //    TestEulerPricer();
 //    BasicMC();
     TestNumberSim();
-}
+}*/
 
 void TestNumberSim() {
     // first we set the parameters
     int nb_assets = 3;
     double maturity = 1.0;
-    double strike = 65;
+    double strike = 60;
     size_t nb_steps = 365;
     // size_t nb_sim = 1e4;
     vector<double> spots = {100,50,60};
@@ -48,6 +48,7 @@ void TestNumberSim() {
         correl_mat[i][i] = 1.0;
     }
     bool use_control_variate = false;
+    bool use_antithetic = false;
     // we start the pricing
     UniformGenerator* Unif = new EcuyerCombined();
     NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);
@@ -60,8 +61,8 @@ void TestNumberSim() {
     results.reserve(10); // change later as function input
 
     //loop
-    for (int i = 1000; i <=10000; i +=1000) {
-        std::vector<double> price= euro_basket_opt.PriceCall(nb_steps, i, false, false);
+    for (size_t i = 1000; i <=10000; i +=1000) {
+        std::vector<double> price= euro_basket_opt.PriceCall(nb_steps, i, use_antithetic, use_control_variate);
         results.push_back(std::move(price));
     }
 

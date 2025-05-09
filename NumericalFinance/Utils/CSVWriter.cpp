@@ -1,7 +1,3 @@
-//
-// Created by faune on 5/9/2025.
-//
-
 #include "CSVWriter.h"
 #include <fstream>
 #include <iostream>

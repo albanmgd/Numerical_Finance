@@ -94,7 +94,7 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
     // Finally we can value the option
     vector<double> Payoffs(NbSims, 0.0);
     for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {
-        double stoppingTimeSimul = stoppingTimes[nSimul][0];
+        double stoppingTimeSimul = stoppingTimes[nSimul][1]; // at t=0, can't update the stopping times since all paths are the same => H matrix non invertible
         if (!UseControlVariate)
             Payoffs[nSimul] = exp(-Rate * stoppingTimeSimul) *
                               std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);

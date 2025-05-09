@@ -19,14 +19,14 @@ void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 void TestLongstaffSchwarz();
 
-/*int main()
+int main()
 {
 //    TestBSEulerND();
-//    TestClassImplementation();
+    TestClassImplementation();
 //    TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
-}*/
+}
 
 void TestBSEulerND(){
     cout << "Starting the MC Simulation ..." << endl;
@@ -241,7 +241,7 @@ void TestClassImplementation(){
     double T = 1.; // Maturity
     double K = 60;
     size_t nbSteps = 365;
-    size_t nbSims = 1e3;
+    size_t nbSims = 6e3;
     vector<double> Spots = {100, 50, 60};
     vector<double> Vols = {0.10, 0.25, 0.16};
     double Rate = 0.05;
