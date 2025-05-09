@@ -8,7 +8,7 @@ BlackScholesND::BlackScholesND(Normal* Gen, vector<double> spots, double rate, v
 {
     size_t dim_spots = spots.size();
     size_t dim_vols = spots.size();
-    if ((dim_spots != dim_vols) or (dim_spots == 0)){
+    if ((dim_spots != dim_vols) | (dim_spots == 0)){
         std::runtime_error("Please adjust the dimension of the inputs");
     }
     else

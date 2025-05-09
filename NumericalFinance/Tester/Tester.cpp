@@ -21,14 +21,14 @@ void TestSDE();
 void TestBrownianND();
 void TestPAdic();
 
-/*int main()
+int main()
 {
 //    TestRandom();
 //    TestPDE();
 //    TestSDE();
 //    TestBrownianND();
-    TestPAdic();
-}*/
+//    TestPAdic();
+}
 
 void TestRandom()
 {

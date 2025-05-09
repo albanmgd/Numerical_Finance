@@ -68,7 +68,7 @@ void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool 
         if (antitheticRV)
             HasToBeResimulated = false; /* could be in the loop but would lead to multiple affectations */
     }
-    else if ((~HasToBeResimulated) and (antitheticRV)){
+    else if ((~HasToBeResimulated) & (antitheticRV)){
         for (SinglePath *AntitheticPath: AntitheticPaths){
             Paths.push_back(AntitheticPath);
         }
