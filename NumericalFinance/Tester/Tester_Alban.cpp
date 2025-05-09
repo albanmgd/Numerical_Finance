@@ -10,8 +10,10 @@
 #include "../SDE/BSEulerND.h"
 #include "../RandomGenerator/KakutaniSequence.h"
 #include "../RandomGenerator/EcuyerCombined.h"
+#include "../Pricer/EuropeanBasketOption.h"
 
 void TestBSEulerND();
+void TestClasImplementationBSEUlerND();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 void TestLongstaffSchwarz();
@@ -19,6 +21,7 @@ void TestLongstaffSchwarz();
 int main()
 {
     TestBSEulerND();
+    TestClasImplementationBSEUlerND();
 //    TestKakutaniSequence();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
@@ -75,6 +78,30 @@ void TestBSEulerND(){
     cout << "The variance of the European Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
 }
+
+void TestClasImplementationBSEUlerND(){
+    int dim = 3;
+    double T = 1.; // Maturity
+    double K = 65;
+    size_t nbSteps = 365;
+    size_t nbSims = 1e4;
+    vector<double> Spots = {100, 50, 60};
+    vector<double> Vols = {0.10, 0.25, 0.16};
+    double Rate = 0.05;
+    vector<double> Weights = {0.10, 0.7, 0.2};
+
+    vector<vector<double>> TestCorrelMatrix(dim, vector<double>(dim, 0.1));
+    for (int i = 0; i < dim; ++i) {
+        TestCorrelMatrix[i][i] = 1.0;
+    }
+    bool UseControlVariate = false;
+    UniformGenerator* Unif = new EcuyerCombined();
+    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
+
+    EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
+    TestCorrelMatrix, NormBox);
+    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
+};
 
 void TestKakutaniSequence(){
     int testNbSims = 3;

@@ -1,0 +1,97 @@
+#include <memory>
+#include "BermudeanBasketOption.h"
+#include "../Utils/Matrix.h"
+#include "../SDE/BSEulerND.h"
+
+
+BermudeanBasketOption::BermudeanBasketOption(
+        size_t dim, double K, double T, double Rate, std::vector<double> Spots,
+        std::vector<double> Vols, std::vector<double> Weights,
+        std::vector<std::vector<double>> Correls, Normal* Gen, size_t L) :
+        BasketOption(dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)
+        {};
+
+void BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic, bool UseControlVariate){
+
+    BSEulerND TestScheme = BSEulerND(Generator, Dimension, Spots, Rate, Vols, &Correls);
+    /* Begin by generating directly nbSim asset paths for the d assets & computing the basket values associated */
+    double delta_t = T / NbSteps;
+    vector<vector<std::unique_ptr<SinglePath>>> AllAssetPaths(NbSims);
+    std::vector<SinglePath*> basketValues(NbSims, nullptr);
+    for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
+        AllAssetPaths[nSimul].resize(Dimension); /* resizing to hold d SinglePath */
+        TestScheme.Simulate(0, T, NbSteps, UseAntithetic); /* Simulating the paths - enables us to reuse antithetic control variate*/
+        for (size_t nbAsset=0; nbAsset < Dimension; nbAsset++) {
+            AllAssetPaths[nSimul][nbAsset] = std::make_unique<SinglePath>(*TestScheme.GetPath(nbAsset)); /* need to do copy of paths otherwise pointers get deleted every time we re-call the generate function*/
+        }
+        /* Can finally compute the basket values for that simulation */
+        SinglePath* basketValueSimulation = new SinglePath(0.0, T, NbSteps);
+        for (size_t i=0; i<NbSteps; i++){
+            double currentTimestep = i * delta_t;
+            double basketValueSim = 0.0;
+            for (size_t d=0; d<Dimension; d++){
+                basketValueSim += Weights[d] * AllAssetPaths[nSimul][d]->GetValue(currentTimestep);
+            }
+            basketValueSimulation->AddValue(basketValueSim);
+        }
+        basketValues[nSimul] = basketValueSimulation;
+    }
+    // Backward induction for the stopping times
+    vector<vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, T));
+
+    // Looping through time, starting at T
+    for (size_t i=(NbSteps - 1); i >= 1; i--){
+        std::vector<std::vector<double>> basisVectors(NbSims, std::vector<double>(L, 0.0));
+        double currentTimestep = i * delta_t; double previousTimestep = (i + 1) * delta_t; /* going backward */
+        // Initializing the right hand part of the sum to optimize
+        std::vector<double> basisDecompositionVector (L, 0.0);
+        // Going through all the simulations for one time-step
+        for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
+            double basketValue = basketValues[nSimul]->GetValue(currentTimestep);
+            double previousStoppingTime = stoppingTimes[nSimul][i + 1];
+            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(basketValue - K, 0);
+            /* Constructing the P vector */
+            for (size_t l=0; l < L; l++){
+                double basisScalar= pow(basketValue, l);
+                basisVectors[nSimul][l] = basisScalar;
+                basisDecompositionVector[l] += mulFactor * basisScalar;
+            }
+        }
+        cout << "At i: " <<i << endl;
+        // Can now construct the Phi Matrix
+        Matrix Phi = Matrix(basisVectors);
+        Matrix H = Matrix(Phi.getTranspose() * Phi);
+        // Some gymnastic with matrices to build a column matrix - L usually not too big so should be OK
+        std::vector<std::vector<double>> columnMatrix(L, std::vector<double>(1));
+        for (size_t l = 0; l < L; l++) {
+            columnMatrix[l][0] = basisDecompositionVector[l];
+        }
+        Matrix basisColumnMatrix(columnMatrix);
+        // Can now compute the weights vector alpha
+        Matrix Alpha = H.inverseLU() * basisColumnMatrix;
+        // And finally update the stopping times - need to re-loop through all the paths
+        for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {
+            // Computing the basis expansion with alpha coefficients
+            double alphaBasisExpansion = 0.0; double payoffSimulation = std::max<double>(basketValues[nSimul]->GetValue(currentTimestep) - K, 0);
+            for (size_t l=0; l < L; l++){
+                alphaBasisExpansion += Alpha.data[l][0] * basisVectors[nSimul][l];
+            }
+            if (payoffSimulation >= alphaBasisExpansion){
+                stoppingTimes[nSimul][i] = currentTimestep;
+            }
+            else {
+                stoppingTimes[nSimul][i] = stoppingTimes[nSimul][i+1];
+            }
+        }
+    }
+    // Finally we can value the option
+    double payoff = 0.0;
+    for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {
+        double stoppingTimeSimul = stoppingTimes[nSimul][0];
+        payoff += exp(- Rate * stoppingTimeSimul) * std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);
+    }
+};
+
+BermudeanBasketOption::~BermudeanBasketOption()
+{
+}
