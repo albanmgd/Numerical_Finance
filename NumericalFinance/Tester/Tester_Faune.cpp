@@ -1,7 +1,3 @@
-//
-// Created by faune on 5/9/2025.
-//
-
 #include <iostream>
 #include <vector>
 
@@ -60,7 +56,7 @@ void TestNumberSim() {
     std::vector<vector<double>> results;
     results.reserve(10); // change later as function input
 
-    //loop
+    // loop
     for (size_t i = 1000; i <=10000; i +=1000) {
         std::vector<double> price= euro_basket_opt.PriceCall(nb_steps, i, use_antithetic, use_control_variate);
         results.push_back(std::move(price));

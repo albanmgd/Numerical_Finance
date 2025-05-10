@@ -33,7 +33,8 @@ std::vector<std::vector<double>> BrownianND::getCholeskyDecomposition(std::vecto
 
 void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, bool antitheticRV){
     // Remove previous path
-    if(Paths.size() > 0) delete Paths[0];
+    for (SinglePath *path: Paths)
+        delete path;
     Paths.clear();
 
     double dt = (endTime - startTime) / nbSteps;

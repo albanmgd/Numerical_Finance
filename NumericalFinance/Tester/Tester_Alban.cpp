@@ -14,15 +14,17 @@
 #include "../Pricer/BermudeanBasketOption.h"
 
 void TestPAdic();
+void TestMeanKakutani();
 void TestClassImplementation();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 
 int main()
 {
-   TestPAdic();
-   TestKakutaniSequence();
-   TestClassImplementation();
+//   TestPAdic();
+//   TestKakutaniSequence();
+//    TestMeanKakutani();
+    TestClassImplementation();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
 }
@@ -50,6 +52,18 @@ void TestKakutaniSequence(){
     }
 };
 
+void TestMeanKakutani() {
+    int testNbSims = 1e3;
+    int testDim = 3; /* testing with d assets */
+    int testN = 365;
+    bool isAverageOk, isVarianceOk;
+    KakutaniSequence TestKakutaniSq = KakutaniSequence(testNbSims, testDim, testN);
+    isAverageOk = TestKakutaniSq.TestMean(testNbSims, 0.01);
+    isVarianceOk = TestKakutaniSq.TestVariance(testNbSims, 0.01);
+    cout << "Mean OK: " << isAverageOk << " Variance OK:  " << isVarianceOk << std::endl;;
+
+}
+
 void TestClassImplementation(){
     int dim = 3;
     double T = 1.; // Maturity
@@ -73,7 +87,7 @@ void TestClassImplementation(){
     // Testing for the european option
     EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
                                                   TestCorrelMatrix, NormBoxEuropean);
-    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
+    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, true, false);
 
     // Testing for the bermudean option
     size_t L = 3;
