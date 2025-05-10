@@ -33,7 +33,7 @@ double PAdic::add(double firstNb, double secondNb){
 
     std::vector<int> result;
     int carry = 0;
-    for (int i = 0; i < std::max(pDecompFirst.size(), pDecompSecond.size()); ++i) {
+    for (int i = 0; i < Precision; ++i) {
         int sum = carry;
         if (i < pDecompFirst.size()) sum += pDecompFirst[i];
         if (i < pDecompSecond.size()) sum += pDecompSecond[i];
@@ -41,28 +41,7 @@ double PAdic::add(double firstNb, double secondNb){
         result.push_back(sum % Base);
         carry = sum / Base;
     }
+
+    // Ignore final carry beyond 'Precision' digits (i.e., do mod 1)
     return padic_to_double(&result);
 }
-
-/*std::vector<int> PAdic::rotate(float* number, float* angle) {
-    std::vector<int> a_digits = float_to_padic(*number);
-    std::vector<int> b_digits = float_to_padic(*angle);
-    std::vector<int> result(Precision, 0);
-
-    // Convolution multiplication
-    for (int i = 0; i < Precision; ++i) {
-        for (int j = 0; j < Precision; ++j) {
-            if (i + j >= Precision) continue;
-            result[i + j] += a_digits[i] * b_digits[j];
-        }
-    }
-
-    // Carry propagation
-    int carry = 0;
-    for (int k = 0; k < Precision; ++k) {
-        result[k] += carry;
-        carry = result[k] / Base;
-        result[k] %= Base;
-    }
-    return result;
-}*/

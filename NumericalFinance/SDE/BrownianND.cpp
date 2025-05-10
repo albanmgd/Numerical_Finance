@@ -36,9 +36,6 @@ void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, boo
     if(Paths.size() > 0) delete Paths[0];
     Paths.clear();
 
-/*    *//* Computing the Cholesky decomposition only once *//*
-    std::vector<std::vector<double>> CholeskyMatrix = getCholeskyDecomposition(CorrelationMatrix);*/
-
     double dt = (endTime - startTime) / nbSteps;
     vector<vector<double>> MatrixCorrelatedBMs(Dimension, std::vector<double>(nbSteps, 0.0));
 
@@ -58,7 +55,7 @@ void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, boo
             for (size_t j=0; j < Dimension; j++){
                 CorrelatedBrownian += CholeskyDecomposition[k][j] * NormalVariables[j];
             }
-//            Path->AddValue(CorrelatedBrownian);
+
             MatrixCorrelatedBMs[k][i] = CorrelatedBrownian;
         }
     }

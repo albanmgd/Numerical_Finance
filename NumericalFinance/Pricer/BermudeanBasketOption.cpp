@@ -5,10 +5,10 @@
 #include <memory>
 
 BermudeanBasketOption::BermudeanBasketOption(
-        size_t dim, double K, double T, double Rate, std::vector<double> Spots,
+        size_t Dim, double K, double T, double Rate, std::vector<double> Spots,
         std::vector<double> Vols, std::vector<double> Weights,
         std::vector<std::vector<double>> Correls, Normal* Gen, size_t L) :
-        BasketOption(dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)
+        BasketOption(Dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)
         {};
 
 std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
@@ -79,7 +79,8 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
         // And finally update the stopping times - need to re-loop through all the paths
         for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {
             // Computing the basis expansion with alpha coefficients
-            double alphaBasisExpansion = 0.0; double payoffSimulation = std::max<double>(basketValues[nSimul]->GetValue(currentTimestep) - K, 0);
+            double alphaBasisExpansion = 0.0;
+            double payoffSimulation = std::max<double>(basketValues[nSimul]->GetValue(currentTimestep) - K, 0);
             for (size_t l=0; l < L; l++){
                 alphaBasisExpansion += Alpha.data[l][0] * basisVectors[nSimul][l];
             }

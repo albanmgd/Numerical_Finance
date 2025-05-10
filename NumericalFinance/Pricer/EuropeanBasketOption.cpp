@@ -5,10 +5,10 @@
 #include <memory>
 
 EuropeanBasketOption::EuropeanBasketOption(
-        size_t dim, double K, double T, double Rate, std::vector<double> Spots,
+        size_t Dim, double K, double T, double Rate, std::vector<double> Spots,
         std::vector<double> Vols, std::vector<double> Weights,
         std::vector<std::vector<double>> Correls, Normal* Gen) :
-        BasketOption(dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen)
+        BasketOption(Dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen)
 {};
 
 std::vector<double> EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
@@ -23,6 +23,8 @@ std::vector<double> EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSim
     vector<double> Payoffs (NbSims, 0.0);
 
     for (size_t nSimul=0; nSimul < NbSims; nSimul++){
+        cout << "Done for sim: " << nSimul << endl;
+
         double LocalPayoff = 0.0;
         double ControlVariateLocalPayoff = 0.0;
         TestScheme.Simulate(0, T, NbSteps, UseAntithetic);

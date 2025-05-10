@@ -170,10 +170,3 @@ void TestBrownianND(){
     TestBrownianND.Simulate(0, T, nbSteps);
 };
 
-void TestPAdic(){
-    /* Testing the example of the course */
-    double a = 0.123333333;
-    double b = 0.412777777;
-    PAdic pAdicDecomposition = PAdic(10);
-    cout << "p-adic decomposition of " << a << " and " << b << " yields: " << pAdicDecomposition.add(a, b);
-}
