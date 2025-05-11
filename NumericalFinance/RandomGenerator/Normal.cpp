@@ -50,7 +50,12 @@ double NormalBoxMuller::Generate()
 }
 double NormalCLT::Generate()
 {
-	throw std::runtime_error("The Central Limit Theorem method is not implemented yet for Normal distribution");
+    size_t sampleSize = 12;
+    double result = 0.0;
+    for (size_t i=0; i<sampleSize; i++){
+        result += Uniform->Generate();
+    }
+    return (result - 6);
 }
 double NormalRejectionSampling::Generate()
 {

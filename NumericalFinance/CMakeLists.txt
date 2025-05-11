@@ -1,0 +1,78 @@
+cmake_minimum_required(VERSION 3.31)
+project(NumericalFinance)
+
+set(CMAKE_CXX_STANDARD 14)
+
+include_directories(PDE)
+include_directories(Pricer)
+include_directories(RandomGenerator)
+include_directories(SDE)
+include_directories(Utils)
+
+add_executable(NumericalFinance
+        PDE/PDEGrid2D.cpp
+        PDE/PDEGrid2D.h
+        PDE/R1R1Function.cpp
+        PDE/R1R1Function.h
+        PDE/R2R1Function.cpp
+        PDE/R2R1Function.h
+        Pricer/BasketOption.cpp
+        Pricer/BasketOption.h
+        Pricer/BermudeanBasketOption.cpp
+        Pricer/BermudeanBasketOption.h
+        Pricer/EuropeanBasketOption.cpp
+        Pricer/EuropeanBasketOption.h
+        RandomGenerator/Bernoulli.cpp
+        RandomGenerator/Bernoulli.h
+        RandomGenerator/Binomial.cpp
+        RandomGenerator/Binomial.h
+        RandomGenerator/ContinuousGenerator.cpp
+        RandomGenerator/ContinuousGenerator.h
+        RandomGenerator/DiscreteGenerator.cpp
+        RandomGenerator/DiscreteGenerator.h
+        RandomGenerator/EcuyerCombined.cpp
+        RandomGenerator/EcuyerCombined.h
+        RandomGenerator/Exponential.cpp
+        RandomGenerator/Exponential.h
+        RandomGenerator/FiniteSet.cpp
+        RandomGenerator/FiniteSet.h
+        RandomGenerator/HeadTail.cpp
+        RandomGenerator/HeadTail.h
+        RandomGenerator/KakutaniSequence.cpp
+        RandomGenerator/KakutaniSequence.h
+        RandomGenerator/LinearCongruential.cpp
+        RandomGenerator/LinearCongruential.h
+        RandomGenerator/Normal.cpp
+        RandomGenerator/Normal.h
+        RandomGenerator/PAdic.cpp
+        RandomGenerator/PAdic.h
+        RandomGenerator/Poisson.cpp
+        RandomGenerator/Poisson.h
+        RandomGenerator/PseudoGenerator.cpp
+        RandomGenerator/PseudoGenerator.h
+        RandomGenerator/RandomGenerator.cpp
+        RandomGenerator/RandomGenerator.h
+        RandomGenerator/UniformGenerator.cpp
+        RandomGenerator/UniformGenerator.h
+        SDE/BlackScholes1D.cpp
+        SDE/BlackScholes1D.h
+        SDE/BlackScholesND.cpp
+        SDE/BlackScholesND.h
+        SDE/BrownianND.cpp
+        SDE/BrownianND.h
+        SDE/BSEuler1D.cpp
+        SDE/BSEuler1D.h
+        SDE/BSEulerND.cpp
+        SDE/BSEulerND.h
+        SDE/RandomProcess.cpp
+        SDE/RandomProcess.h
+        SDE/SinglePath.cpp
+        SDE/SinglePath.h
+        Tester/Tester.cpp
+        Tester/Files_Report_Generation.cpp
+        Utils/basic_functions.cpp
+        Utils/basic_functions.h
+        Utils/Matrix.cpp
+        Utils/Matrix.h
+        Utils/CSVWriter.cpp
+        Utils/CSVWriter.h)

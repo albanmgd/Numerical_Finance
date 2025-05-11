@@ -6,7 +6,6 @@ BlackScholes1D::BlackScholes1D(Normal* Gen, double spot, double rate, double vol
 
 }
 
-
 BlackScholes1D::~BlackScholes1D()
 {
 }

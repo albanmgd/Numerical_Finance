@@ -12,7 +12,7 @@ protected:
 
 public:
 	RandomProcess(RandomGenerator* Gen, int dim);
-	virtual void Simulate(double startTime, double endTime, size_t nbSteps) = 0;
+	virtual void Simulate(double startTime, double endTime, size_t nbSteps, bool antitheticRV=false) = 0;
 	SinglePath* GetPath(int dimension);
 	~RandomProcess();
 };

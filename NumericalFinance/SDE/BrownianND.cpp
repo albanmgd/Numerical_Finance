@@ -31,13 +31,11 @@ std::vector<std::vector<double>> BrownianND::getCholeskyDecomposition(std::vecto
     return L;
 }
 
-void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps){
+void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, bool antitheticRV){
     // Remove previous path
-    if(Paths.size() > 0) delete Paths[0];
+    for (SinglePath *path: Paths)
+        delete path;
     Paths.clear();
-
-/*    *//* Computing the Cholesky decomposition only once *//*
-    std::vector<std::vector<double>> CholeskyMatrix = getCholeskyDecomposition(CorrelationMatrix);*/
 
     double dt = (endTime - startTime) / nbSteps;
     vector<vector<double>> MatrixCorrelatedBMs(Dimension, std::vector<double>(nbSteps, 0.0));
@@ -58,7 +56,7 @@ void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps){
             for (size_t j=0; j < Dimension; j++){
                 CorrelatedBrownian += CholeskyDecomposition[k][j] * NormalVariables[j];
             }
-//            Path->AddValue(CorrelatedBrownian);
+
             MatrixCorrelatedBMs[k][i] = CorrelatedBrownian;
         }
     }
