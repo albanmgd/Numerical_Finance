@@ -1,4 +1,5 @@
 #include "KakutaniSequence.h"
+#include "EcuyerCombined.h"
 
 KakutaniSequence::KakutaniSequence(int nbSims, int dim, int length):
 NbSims(nbSims), Dimension(dim), Length(length), localD(0), localN(0)
@@ -38,6 +39,7 @@ std::vector<int> KakutaniSequence::firstDPrimes() {
 }
 
 void KakutaniSequence::createKakutaniSequence3D() {
+    UniformGenerator* EcuyerGen = new EcuyerCombined();
     /* Want to fill the 3d vector only once at instantiation to save time */
     std::vector<std::vector<std::vector<double>>> result(NbSims,
     std::vector<std::vector<double>>(Length, std::vector<double>(Dimension)));
@@ -58,7 +60,8 @@ void KakutaniSequence::createKakutaniSequence3D() {
 
         for (int t = 0; t < Length; ++t) {
             for (int d = 0; d < Dimension; ++d) {
-                result[sim][t][d] = xiSim[d];
+                // result[sim][t][d] = xiSim[d];
+                result[sim][t][d] = fmod(xiSim[d] + EcuyerGen->Generate(), 1.0);
                 xiSim[d] = pAdicObjects[d]->add(xiSim[d], y[d]);
             }
         }

@@ -54,35 +54,38 @@ void TestKakutaniSequence(){
 };
 
 void TestMeanKakutani() {
-    int testNbSims = 1e3;
+    int testNbSims = 1e4;
     int testDim = 3; /* testing with d assets */
     int testN = 365;
     bool isAverageOk, isVarianceOk;
     KakutaniSequence* TestKakutaniSq = new KakutaniSequence(testNbSims, testDim, testN);
     UniformGenerator* UnifEuropean = new EcuyerCombined();
-    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., TestKakutaniSq);
+    // NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., TestKakutaniSq);
+    NormalCLT* NormCLT = new NormalCLT(0., 1., TestKakutaniSq);
 
-    isAverageOk = NormBox -> TestMean(testNbSims, 0.01);
-    isVarianceOk = NormBox -> TestVariance(testNbSims, 0.01);
+/*
+    isAverageOk = NormCLT -> TestMean(testNbSims, 0.01);
+    isVarianceOk = NormCLT -> TestVariance(testNbSims, 0.01);
     cout << "Mean OK: " << isAverageOk << " Variance OK:  " << isVarianceOk << std::endl;
+*/
 
     // Exporting the generated nbs as a csv to check distrib with Python
-/*    std::vector<std::vector<double>> values(testNbSims);
+    std::vector<std::vector<double>> values(testNbSims);
 
     for (size_t i = 0; i < testNbSims; ++i) {
-        values[i] = { 0, 0, NormBox->Generate() };  // Initialize each inner vector with one value
+        values[i] = { 0, 0, NormCLT->Generate() };  // Initialize each inner vector with one value
     }
-    // getting the csv
-    std::string filename = "C:\\Users\\mager\\Downloads\\test_normal.csv";
-    WriteCSV(values, filename);*/
+    // Getting the csv
+    std::string filename = "C:\\Users\\mager\\Downloads\\test_normal_clt.csv";
+    WriteCSV(values, filename);
 }
 
-void TestClassImplementation(){
+void TestClassImplementation() {
     int dim = 3;
     double T = 1.; // Maturity
     double K = 60;
     size_t nbSteps = 365;
-    size_t nbSims = 1e3;
+    size_t nbSims = 1e4;
     vector<double> Spots = {100, 50, 60};
     vector<double> Vols = {0.10, 0.25, 0.16};
     double Rate = 0.05;
@@ -93,13 +96,15 @@ void TestClassImplementation(){
         TestCorrelMatrix[i][i] = 1.0;
     }
 
-    UniformGenerator* UnifEuropean = new EcuyerCombined();
-    //UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
-    NormalBoxMuller* NormBoxEuropean = new NormalBoxMuller(0., 1., UnifEuropean);
+    //UniformGenerator* UnifEuropean = new EcuyerCombined();
+    UniformGenerator *UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
+
+    NormalBoxMuller *NormEuropean = new NormalBoxMuller(0., 1., UnifEuropean);
+    //NormalCLT* NormEuropean = new NormalCLT(0., 1., UnifEuropean);
 
     // Testing for the european option
     EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
-                                                  TestCorrelMatrix, NormBoxEuropean);
+                                                  TestCorrelMatrix, NormEuropean);
     testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
 
     // Testing for the bermudean option
