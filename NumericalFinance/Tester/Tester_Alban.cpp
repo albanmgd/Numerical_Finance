@@ -18,14 +18,14 @@ void TestClassImplementation();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 
-int main()
+/*int main()
 {
    TestPAdic();
    TestKakutaniSequence();
    TestClassImplementation();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
-}
+}*/
 
 void TestPAdic(){
     /* Testing the example of the course */
