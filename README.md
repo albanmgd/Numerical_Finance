@@ -5,4 +5,5 @@ We implement the following variance reduction techniques:
 - Antithetic variable
 - Static control variate
 - Quasi-MC, using Kakutani sequences
-To obtain the results we present in the report, please see the file: <code>Test/Files_Report_Generation.cpp</code>
+
+To obtain the results we present in the report, please see the file: <code>Test/Files_Report_Generation.cpp</code> and the Python notebook <code>Utils/</code> 
