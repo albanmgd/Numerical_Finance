@@ -1,0 +1,369 @@
+Index: Tester/Tester_Faune.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>//\r\n// Created by faune on 5/9/2025.\r\n//\r\n\r\n#include <iostream>\r\n#include <vector>\r\n\r\n#include \"../Pricer/EuropeanBasketOption.h\"\r\n#include \"../SDE/BlackScholesND.h\"\r\n#include \"../RandomGenerator/LinearCongruential.h\"\r\n#include \"../RandomGenerator/EcuyerCombined.h\"\r\n#include \"../RandomGenerator/FiniteSet.h\"\r\n#include \"../RandomGenerator/Exponential.h\"\r\n#include \"../RandomGenerator/Normal.h\"\r\n#include \"../RandomGenerator/Poisson.h\"\r\n#include \"../RandomGenerator/PAdic.h\"\r\n#include \"../PDE/PDEGrid2D.h\"\r\n#include \"../SDE/BlackScholes1D.h\"\r\n#include \"../SDE/BSEuler1D.h\"\r\n#include \"../SDE/BrownianND.h\"\r\n#include \"../SDE/BSEulerND.h\"\r\n#include \"../SDE/BlackScholesND.h\"\r\n#include \"../Utils/CSVWriter.h\"\r\n\r\nvoid TestEulerPricer();\r\nvoid BasicMC();\r\nvoid TestNumberSim();\r\n\r\nint main() {\r\n//    TestEulerPricer();\r\n//    BasicMC();\r\n    TestNumberSim();\r\n}\r\n\r\nvoid TestNumberSim() {\r\n    // first we set the parameters\r\n    int nb_assets = 3;\r\n    double maturity = 1.0;\r\n    double strike = 60;\r\n    size_t nb_steps = 365;\r\n    // size_t nb_sim = 1e4;\r\n    vector<double> spots = {100,50,60};\r\n    vector<double> vols = {0.10,0.25,0.16};\r\n    double rate = 0.05;\r\n    vector<double> weights = {0.10, 0.7, 0.2};\r\n    vector<vector<double>> correl_mat(nb_assets, vector<double>(nb_assets, 0.1));\r\n    for (int i = 0; i < nb_assets; i++) {\r\n        correl_mat[i][i] = 1.0;\r\n    }\r\n    bool use_control_variate = true;\r\n    bool use_antithetic = true;\r\n    // we start the pricing\r\n    UniformGenerator* Unif = new EcuyerCombined();\r\n    NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);\r\n\r\n    EuropeanBasketOption euro_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox);\r\n    // and we loop on the number of simuls\r\n\r\n    // storing for res\r\n    std::vector<vector<double>> results;\r\n    results.reserve(50); // change later as function input\r\n\r\n    //loop\r\n    for (size_t i = 1000; i <=25000; i +=500) {\r\n        std::vector<double> price= euro_basket_opt.PriceCall(nb_steps, i, use_antithetic, use_control_variate);\r\n        results.push_back(std::move(price));\r\n        cout <<  \"Pricing done for \" << i << \" simulations\" << endl;\r\n    }\r\n\r\n    // getting the csv\r\n    std::string filename = \"C:\\\\Users\\\\faune\\\\numerical-finance\\\\Numerical_Finance\\\\NumericalFinance\\\\Results\\\\combined_res_mc.csv\";\r\n    WriteCSV(results, filename);\r\n}\r\n\r\nvoid BasicMC() {\r\n    // first we price the call option\r\n    int nb_assets = 3;\r\n    double maturity = 1.0;\r\n    double strike = 65;\r\n    size_t nb_steps = 365;\r\n    size_t nb_sim = 1e4;\r\n    vector<double> spots = {100,50,60};\r\n    vector<double> vols = {0.10,0.25,0.16};\r\n    double rate = 0.05;\r\n    vector<double> weights = {0.10, 0.7, 0.2};\r\n    vector<vector<double>> correl_mat(nb_assets, vector<double>(nb_assets, 0.1));\r\n    for (int i = 0; i < nb_assets; i++) {\r\n        correl_mat[i][i] = 1.0;\r\n    }\r\n    bool use_control_variate = false;\r\n    UniformGenerator* Unif = new EcuyerCombined();\r\n    NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);\r\n\r\n    EuropeanBasketOption euro_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox);\r\n    std::vector<double> results= euro_basket_opt.PriceCall(nb_steps, nb_sim, false, false);\r\n\r\n    // getting the csv\r\n    std::string filename = \"C:\\\\Users\\\\faune\\\\numerical-finance\\\\Numerical_Finance\\\\NumericalFinance\\\\Results\\\\one_res_mc.csv\";\r\n    // WriteCSV(results, filename);\r\n\r\n}\r\n\r\n\r\n\r\nvoid TestEulerPricer() {\r\n    // setting MC params\r\n    int nb_assets = 3;\r\n    size_t nb_sim = 1e4;\r\n    size_t nb_steps = 365;\r\n\r\n    // inputs for pricing\r\n    double maturity = 1.;\r\n    double strike = 100.;\r\n    double rate = 0.05;\r\n    std::vector<double> spots = {95.0, 100.0, 105.0};\r\n    std::vector<double> vols = {0.15, 0.2, 0.25};\r\n    std::vector<double> weights = {-0.1, 0.4, 0.7};\r\n    std::vector<std::vector<double>> correl_mat = {\r\n        {1.0, 0.5, 0.3},\r\n        {0.5, 1.0, 0.4},\r\n            {0.3, 0.4, 1.0}\r\n    };\r\n\r\n    // starting the simulation\r\n    std::cout << \"----------Starting Monte Carlo----------\" << std::endl;\r\n    clock_t start, end;\r\n    start = clock();\r\n\r\n    // we then setup the random simulators\r\n    UniformGenerator* Unif = new EcuyerCombined();\r\n    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif); // use BrownianND instead ??\r\n\r\n    // then we use the function coded in BlackScholesND :\r\n    // BlackScholesND BS(NormBox, spots, strike, vols);\r\n    // double price = BS.PriceBasketCallOption(strike, weights, maturity, correl_mat);\r\n\r\n    // correlated BM\r\n    // BrownianND *brownian = new BrownianND(NormBox, spots.size(), &correl_mat);\r\n    BSEulerND BSProcess(NormBox,nb_assets ,spots, rate, vols, &correl_mat);\r\n\r\n    //loop for MC\r\n    double payoffs = 0.0;\r\n    for (size_t i = 0; i < nb_sim; i++) {\r\n        double local_payoff = 0.0;\r\n        BSProcess.Simulate(0,maturity, nb_steps, false);\r\n        for (size_t j=0; j< nb_assets; j++){\r\n            local_payoff += weights[j] * BSProcess.GetPath(j)->GetValue(maturity);\r\n        }\r\n        payoffs += std::max<double>(local_payoff - strike, 0.0);\r\n    }\r\n    double price = exp(-rate*maturity) * payoffs/nb_sim;\r\n    end = clock();\r\n    std::cout << \"The price is : \" << price  << \" Time : \" << (end-start)*1000.0 /CLOCKS_PER_SEC << \"ms\" << std::endl;\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Tester/Tester_Faune.cpp b/Tester/Tester_Faune.cpp
+--- a/Tester/Tester_Faune.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/Tester/Tester_Faune.cpp	(date 1746971294619)
+@@ -47,8 +47,8 @@
+     for (int i = 0; i < nb_assets; i++) {
+         correl_mat[i][i] = 1.0;
+     }
+-    bool use_control_variate = true;
+-    bool use_antithetic = true;
++    bool use_control_variate = false;
++    bool use_antithetic = false;
+     // we start the pricing
+     UniformGenerator* Unif = new EcuyerCombined();
+     NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);
+@@ -58,7 +58,7 @@
+ 
+     // storing for res
+     std::vector<vector<double>> results;
+-    results.reserve(50); // change later as function input
++    results.reserve(10); // change later as function input
+ 
+     //loop
+     for (size_t i = 1000; i <=25000; i +=500) {
+@@ -68,7 +68,7 @@
+     }
+ 
+     // getting the csv
+-    std::string filename = "C:\\Users\\faune\\numerical-finance\\Numerical_Finance\\NumericalFinance\\Results\\combined_res_mc.csv";
++    std::string filename = "C:\\Users\\faune\\numerical-finance\\Numerical_Finance\\NumericalFinance\\Results\\one_res_mc.csv";
+     WriteCSV(results, filename);
+ }
+ 
+Index: RandomGenerator/RandomGenerator.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># include \"RandomGenerator.h\"\r\n#include <vector>\r\n\r\nRandomGenerator::RandomGenerator() : targetMean(0.), targetVariance(0.)\r\n{\r\n\r\n}\r\n\r\nRandomGenerator::RandomGenerator(double mean, double variance) : \r\n\ttargetMean(mean),\r\n\ttargetVariance(variance)\r\n{}\r\n\r\nRandomGenerator::~RandomGenerator()\r\n{\r\n\r\n}\r\n\r\nbool RandomGenerator::TestMean(myLong nbSim, double tol)\r\n{\r\n\tdouble computedMean = Mean(nbSim);\r\n\tdouble spread = abs(computedMean - targetMean);\r\n\r\n\tif (spread > tol)\r\n\t\treturn false;\r\n\telse\r\n\t\treturn true;\r\n\r\n\t/*\r\n\treturn (abs(Mean(nbSim) - targetMean) <= tol);\r\n\t*/\r\n}\r\n\r\nbool RandomGenerator::TestVariance(myLong nbSim, double tol)\r\n{\r\n\tdouble computedVariance = Variance(nbSim);\r\n\tdouble spread = abs(computedVariance - targetVariance);\r\n\r\n\tif (spread > tol)\r\n\t\treturn false;\r\n\telse\r\n\t\treturn true;\r\n}\r\n\r\ndouble RandomGenerator::Mean(myLong nbSim)\r\n{\r\n\tdouble result = 0.;\r\n\tfor (myLong i = 0; i < nbSim; ++i)\r\n\t{\r\n\t\tresult += Generate();\r\n\t}\r\n\treturn result / nbSim;\r\n}\r\n\r\ndouble RandomGenerator::Variance(myLong nbSim)\r\n{\r\n\tdouble result = 0.;\r\n\tdouble mean = 0.;\r\n\r\n\tstd::vector<double> GeneratedNumbers;\r\n\r\n\tfor (myLong i = 0; i < nbSim; ++i)\r\n\t{\r\n\t\tdouble generated = Generate();\r\n\t\tGeneratedNumbers.push_back(generated);\r\n\r\n\t\tmean += generated / nbSim;\r\n\t\t//mean += GeneratedNumbers.back()/nbSim;\r\n\t}\r\n\t\r\n\tfor (myLong i = 0; i < nbSim; ++i)\r\n\t{\r\n\t\tresult += pow((GeneratedNumbers[i] - mean) , 2);\r\n\t}\r\n\treturn result / nbSim;\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/RandomGenerator/RandomGenerator.cpp b/RandomGenerator/RandomGenerator.cpp
+--- a/RandomGenerator/RandomGenerator.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/RandomGenerator/RandomGenerator.cpp	(date 1746971132207)
+@@ -19,7 +19,7 @@
+ bool RandomGenerator::TestMean(myLong nbSim, double tol)
+ {
+ 	double computedMean = Mean(nbSim);
+-	double spread = abs(computedMean - targetMean);
++	double spread = std::abs(computedMean - targetMean);
+ 
+ 	if (spread > tol)
+ 		return false;
+@@ -34,7 +34,7 @@
+ bool RandomGenerator::TestVariance(myLong nbSim, double tol)
+ {
+ 	double computedVariance = Variance(nbSim);
+-	double spread = abs(computedVariance - targetVariance);
++	double spread = std::abs(computedVariance - targetVariance);
+ 
+ 	if (spread > tol)
+ 		return false;
+Index: RandomGenerator/KakutaniSequence.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include \"KakutaniSequence.h\"\r\n\r\nKakutaniSequence::KakutaniSequence(int nbSims, int dim, int length):\r\nNbSims(nbSims), Dimension(dim), Length(length), localD(0), localN(0)\r\n{\r\n    countNbSim = 0;\r\n    firstDPrimeNumbers = firstDPrimes(); /* Computed only once */\r\n    pAdicObjects.resize(Dimension);\r\n    for (int i = 0; i < Dimension; ++i)\r\n        pAdicObjects[i] = new PAdic(firstDPrimeNumbers[i]);\r\n    // Preparing the 3D vector\r\n    Sequence.resize(nbSims);\r\n    for (int sim = 0; sim < nbSims; ++sim) {\r\n        Sequence[sim].resize(Length);\r\n        for (int t = 0; t < Length; ++t) {\r\n            Sequence[sim][t].resize(dim);\r\n        }\r\n    }\r\n    createKakutaniSequence3D();\r\n}\r\n\r\n// Return the first d prime numbers\r\nstd::vector<int> KakutaniSequence::firstDPrimes() {\r\n    std::vector<int> primes;\r\n    int num = 2;\r\n    while (primes.size() < Dimension) {\r\n        bool is_prime = true;\r\n        for (int i = 2; i <= sqrt(num); ++i)\r\n            if (num % i == 0) {\r\n                is_prime = false;\r\n                break;\r\n            }\r\n        if (is_prime)\r\n            primes.push_back(num);\r\n        ++num;\r\n    }\r\n    return primes;\r\n}\r\n\r\nvoid KakutaniSequence::createKakutaniSequence3D() {\r\n    /* Want to fill the 3d vector only once at instantiation to save time */\r\n    std::vector<std::vector<std::vector<double>>> result(NbSims,\r\n    std::vector<std::vector<double>>(Length, std::vector<double>(Dimension)));\r\n\r\n    std::vector<double> x(Dimension), y(Dimension), xi(Dimension);\r\n\r\n    // Compute y_i = 1/p + 1/p^2\r\n    for (int i = 0; i < Dimension; ++i) {\r\n        int p = firstDPrimeNumbers[i];\r\n        x[i] = 1.0 / p;\r\n        y[i] = 1.0 / p + 1.0 / (p * p);\r\n        xi[i] = x[i];  // Starting value for each dimension\r\n    }\r\n\r\n    // Fill the 3D sequence\r\n    for (int sim = 0; sim < NbSims; ++sim) {\r\n        std::vector<double> xiSim = xi;  // Copy starting state for this simulation\r\n\r\n        for (int t = 0; t < Length; ++t) {\r\n            for (int d = 0; d < Dimension; ++d) {\r\n                result[sim][t][d] = xiSim[d];\r\n                xiSim[d] = pAdicObjects[d]->add(xiSim[d], y[d]);\r\n            }\r\n        }\r\n\r\n        // For shifted index logic: advance by nbSteps to avoid overlaps\r\n        for (int d = 0; d < Dimension; ++d) {\r\n            for (int s = 0; s < Length; ++s)\r\n                xi[d] = pAdicObjects[d]->add(xi[d], y[d]);\r\n        }\r\n    }\r\n    Sequence = result;\r\n}\r\n\r\ndouble KakutaniSequence::Generate() {\r\n    /* Once we're here we already have one a nbSIms *nbSteps*d matrix of RVs.\r\n     * We just need to send return one of them in the correct order */\r\n    // Safety check: make sure we don't go out of bounds\r\n    if (countNbSim >= Sequence.size()) {\r\n        throw std::out_of_range(\"All simulations exhausted in KakutaniSequence::Generate().\");\r\n    }\r\n\r\n    double output = Sequence[countNbSim][localN][localD];\r\n\r\n    // Move to next dimension or timestep\r\n    if (localD == Dimension - 1) {\r\n        localD = 0;\r\n        localN += 1;\r\n\r\n        // If we've exhausted this simulation's time steps, move to next simulation\r\n        if (localN == Length) {\r\n            localN = 0;\r\n            countNbSim += 1;\r\n        }\r\n    } else {\r\n        localD += 1;\r\n    }\r\n\r\n    return output;\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/RandomGenerator/KakutaniSequence.cpp b/RandomGenerator/KakutaniSequence.cpp
+--- a/RandomGenerator/KakutaniSequence.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/RandomGenerator/KakutaniSequence.cpp	(date 1746971132207)
+@@ -74,7 +74,7 @@
+ 
+ double KakutaniSequence::Generate() {
+     /* Once we're here we already have one a nbSIms *nbSteps*d matrix of RVs.
+-     * We just need to send return one of them in the correct order */
++     * We just need to return them in the correct order */
+     // Safety check: make sure we don't go out of bounds
+     if (countNbSim >= Sequence.size()) {
+         throw std::out_of_range("All simulations exhausted in KakutaniSequence::Generate().");
+@@ -95,6 +95,5 @@
+     } else {
+         localD += 1;
+     }
+-
+     return output;
+ }
+Index: Utils/basic_functions.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include <vector>\r\n\r\ndouble normalCDF(double x);\r\ndouble meanVector(std::vector<double> vec);\r\ndouble varianceVector(std::vector<double> vec);\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Utils/basic_functions.h b/Utils/basic_functions.h
+--- a/Utils/basic_functions.h	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/Utils/basic_functions.h	(date 1746971132222)
+@@ -3,3 +3,4 @@
+ double normalCDF(double x);
+ double meanVector(std::vector<double> vec);
+ double varianceVector(std::vector<double> vec);
++double laguerrePolynomial(std::size_t l, double x);
+Index: Utils/basic_functions.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include \"basic_functions.h\"\r\n#include <cmath>\r\n#include <iostream>\r\n#include <vector>\r\n\r\ndouble normalCDF(double x) {\r\n    return 0.5 * std::erfc(-x / std::sqrt(2));\r\n};\r\n\r\ndouble meanVector(std::vector<double> vec){\r\n    double nbElements = vec.size();\r\n    double sum = 0.0;\r\n    for (size_t i=0; i<nbElements; i++){\r\n        sum += vec[i];\r\n    }\r\n    return sum / nbElements;\r\n}\r\n\r\ndouble varianceVector(std::vector<double> vec){\r\n    double nbElements = vec.size();\r\n    double mean = meanVector(vec);\r\n    double var = 0.0;\r\n    for (size_t i=0; i<nbElements; i++){\r\n        var += pow(vec[i] - mean, 2);\r\n    }\r\n    return var / nbElements;\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Utils/basic_functions.cpp b/Utils/basic_functions.cpp
+--- a/Utils/basic_functions.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/Utils/basic_functions.cpp	(date 1746971132222)
+@@ -25,3 +25,20 @@
+     }
+     return var / nbElements;
+ }
++
++double laguerrePolynomial(std::size_t l, double x) {
++    if (l == 0) return 1.0;
++    if (l == 1) return 1.0 - x;
++
++    double L_prev2 = 1.0;          // L_0(x)
++    double L_prev1 = 1.0 - x;      // L_1(x)
++    double L_curr;
++
++    for (size_t n = 2; n <= l; ++n) {
++        L_curr = ((2 * n - 1 - x) * L_prev1 - (n - 1) * L_prev2) / n;
++        L_prev2 = L_prev1;
++        L_prev1 = L_curr;
++    }
++
++    return L_curr;
++}
+\ No newline at end of file
+Index: SDE/BrownianND.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include \"BrownianND.h\"\r\n#include <vector>\r\n#include <cmath>\r\n#include <stdexcept>\r\n\r\nBrownianND::BrownianND (RandomGenerator* Gen , int dim, vector <vector<double>>* Corr):\r\n    RandomProcess(Gen, dim), Dimension(dim), CorrelationMatrix(Corr)\r\n{\r\n    CholeskyDecomposition = getCholeskyDecomposition(CorrelationMatrix); /* Computing it once only */\r\n};\r\n\r\nstd::vector<std::vector<double>> BrownianND::getCholeskyDecomposition(std::vector<std::vector<double>>* Corr) {\r\n    int n = Corr->size();\r\n    std::vector<std::vector<double>> L(n, std::vector<double>(n, 0.0));\r\n\r\n    for (int i = 0; i < n; ++i) {\r\n        for (int j = 0; j <= i; ++j) {\r\n            double sum = (*Corr)[i][j];\r\n            for (int k = 0; k < j; ++k)\r\n                sum -= L[i][k] * L[j][k];\r\n\r\n            if (i == j) {\r\n                if (sum <= 0.0)\r\n                    throw std::runtime_error(\"Matrix is not positive definite.\");\r\n                L[i][j] = std::sqrt(sum);\r\n            } else {\r\n                L[i][j] = sum / L[j][j];\r\n            }\r\n        }\r\n    }\r\n    return L;\r\n}\r\n\r\nvoid BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, bool antitheticRV){\r\n    // Remove previous path\r\n    if(Paths.size() > 0) delete Paths[0];\r\n    Paths.clear();\r\n\r\n    double dt = (endTime - startTime) / nbSteps;\r\n    vector<vector<double>> MatrixCorrelatedBMs(Dimension, std::vector<double>(nbSteps, 0.0));\r\n\r\n    /* We simulate the correlated brownian motions at every time step */\r\n    for (size_t i = 0; i < nbSteps; ++i)\r\n    {\r\n        /* First need to generate the n random variables for a given timestamp */\r\n        std::vector<double> NormalVariables(Dimension, 0.0);\r\n        for (size_t k=0; k < Dimension; k++){\r\n            NormalVariables[k] = Generator->Generate() * sqrt(dt);\r\n        }\r\n\r\n        /* Now we can compute the correlated Brownian motions - equivalent to matrix multiplication */\r\n        for (size_t k=0; k < Dimension; k++){\r\n            double CorrelatedBrownian = 0.0;\r\n            /* Corresponds to matrix multiplication */\r\n            for (size_t j=0; j < Dimension; j++){\r\n                CorrelatedBrownian += CholeskyDecomposition[k][j] * NormalVariables[j];\r\n            }\r\n\r\n            MatrixCorrelatedBMs[k][i] = CorrelatedBrownian;\r\n        }\r\n    }\r\n    // Want to store Paths as one Path = time series of Brownian motions for one asset\r\n    for (size_t d=0; d < Dimension; d++){\r\n        SinglePath* BrownianPath = new SinglePath(startTime, endTime, nbSteps);\r\n        for (size_t i=0; i < nbSteps; i++){\r\n            BrownianPath->AddValue(MatrixCorrelatedBMs[d][i]);\r\n        }\r\n        Paths.push_back(BrownianPath);\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/SDE/BrownianND.cpp b/SDE/BrownianND.cpp
+--- a/SDE/BrownianND.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/SDE/BrownianND.cpp	(date 1746971132220)
+@@ -33,7 +33,8 @@
+ 
+ void BrownianND::Simulate (double startTime, double endTime, size_t nbSteps, bool antitheticRV){
+     // Remove previous path
+-    if(Paths.size() > 0) delete Paths[0];
++    for (SinglePath *path: Paths)
++        delete path;
+     Paths.clear();
+ 
+     double dt = (endTime - startTime) / nbSteps;
+Index: Tester/Tester_Alban.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include <iostream>\r\n#include <algorithm>\r\n#include <ctime>\r\n#include <memory>\r\n\r\n#include \"../Utils/Matrix.h\"\r\n#include \"../Utils/basic_functions.h\"\r\n#include \"../RandomGenerator/Normal.h\"\r\n#include \"../SDE/BrownianND.h\"\r\n#include \"../SDE/BSEulerND.h\"\r\n#include \"../RandomGenerator/KakutaniSequence.h\"\r\n#include \"../RandomGenerator/EcuyerCombined.h\"\r\n#include \"../Pricer/EuropeanBasketOption.h\"\r\n#include \"../Pricer/BermudeanBasketOption.h\"\r\n\r\nvoid TestPAdic();\r\nvoid TestClassImplementation();\r\nvoid TestKakutaniSequence();\r\nvoid TestVarianceReductionKakutaniSequence();\r\n\r\n/*int main()\r\n{\r\n   TestPAdic();\r\n   TestKakutaniSequence();\r\n   TestClassImplementation();\r\n//    TestVarianceReductionKakutaniSequence();\r\n//    TestLongstaffSchwarz();\r\n}*/\r\n\r\nvoid TestPAdic(){\r\n    /* Testing the example of the course */\r\n    double a = 0.123333333;\r\n    double b = 0.412777777;\r\n    PAdic pAdicDecomposition = PAdic(10);\r\n    cout << \"p-adic decomposition of \" << a << \" and \" << b << \" yields: \" << pAdicDecomposition.add(a, b) << std::endl;;\r\n}\r\n\r\nvoid TestKakutaniSequence(){\r\n    int testNbSims = 3;\r\n    int testDim = 3; /* testing with d assets */\r\n    int testN = 5;\r\n    KakutaniSequence TestKakutaniSq = KakutaniSequence(testNbSims, testDim, testN);\r\n    for (size_t NbSim=0; NbSim < testNbSims; NbSim ++) {\r\n        for (size_t n = 0; n < testN; n++) {\r\n            for (size_t d = 0; d < testDim; d++) {\r\n                std::cout << \"Simulation: \" << NbSim << \", time step: \" << n << \" and dim: \" << d << \" generated RV is: \"\r\n                          << TestKakutaniSq.Generate() << std::endl;\r\n            }\r\n        }\r\n    }\r\n};\r\n\r\nvoid TestClassImplementation(){\r\n    int dim = 3;\r\n    double T = 1.; // Maturity\r\n    double K = 60;\r\n    size_t nbSteps = 365;\r\n    size_t nbSims = 1e3;\r\n    vector<double> Spots = {100, 50, 60};\r\n    vector<double> Vols = {0.10, 0.25, 0.16};\r\n    double Rate = 0.05;\r\n    vector<double> Weights = {0.10, 0.7, 0.2};\r\n\r\n    vector<vector<double>> TestCorrelMatrix(dim, vector<double>(dim, 0.1));\r\n    for (int i = 0; i < dim; ++i) {\r\n        TestCorrelMatrix[i][i] = 1.0;\r\n    }\r\n\r\n    //UniformGenerator* UnifEuropean = new EcuyerCombined();\r\n    UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);\r\n    NormalBoxMuller* NormBoxEuropean = new NormalBoxMuller(0., 1., UnifEuropean);\r\n\r\n    // Testing for the european option\r\n    EuropeanBasketOption testEuropeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,\r\n                                                  TestCorrelMatrix, NormBoxEuropean);\r\n    testEuropeanBasketOption.PriceCall(nbSteps, nbSims, false, false);\r\n\r\n    // Testing for the bermudean option\r\n    size_t L = 3;\r\n    UniformGenerator* Unif = new KakutaniSequence(nbSims, dim, nbSteps);\r\n    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);\r\n    BermudeanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,\r\n                                                   TestCorrelMatrix, NormBox, L);\r\n    testBermudeanBasketOption.PriceCall(nbSteps, nbSims, false, false);\r\n};
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Tester/Tester_Alban.cpp b/Tester/Tester_Alban.cpp
+--- a/Tester/Tester_Alban.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/Tester/Tester_Alban.cpp	(date 1746971132220)
+@@ -1,28 +1,31 @@
+ #include <iostream>
+ #include <algorithm>
+ #include <ctime>
+-#include <memory>
+ 
+ #include "../Utils/Matrix.h"
+ #include "../Utils/basic_functions.h"
++#include "../Utils/CSVWriter.h"
+ #include "../RandomGenerator/Normal.h"
+ #include "../SDE/BrownianND.h"
+ #include "../SDE/BSEulerND.h"
+ #include "../RandomGenerator/KakutaniSequence.h"
++#include "../RandomGenerator/Normal.h"
+ #include "../RandomGenerator/EcuyerCombined.h"
+ #include "../Pricer/EuropeanBasketOption.h"
+ #include "../Pricer/BermudeanBasketOption.h"
+ 
+ void TestPAdic();
++void TestMeanKakutani();
+ void TestClassImplementation();
+ void TestKakutaniSequence();
+ void TestVarianceReductionKakutaniSequence();
+ 
+ /*int main()
+ {
+-   TestPAdic();
+-   TestKakutaniSequence();
+-   TestClassImplementation();
++//   TestPAdic();
++//   TestKakutaniSequence();
++//    TestMeanKakutani();
++    TestClassImplementation();
+ //    TestVarianceReductionKakutaniSequence();
+ //    TestLongstaffSchwarz();
+ }*/
+@@ -50,6 +53,30 @@
+     }
+ };
+ 
++void TestMeanKakutani() {
++    int testNbSims = 1e3;
++    int testDim = 3; /* testing with d assets */
++    int testN = 365;
++    bool isAverageOk, isVarianceOk;
++    KakutaniSequence* TestKakutaniSq = new KakutaniSequence(testNbSims, testDim, testN);
++    UniformGenerator* UnifEuropean = new EcuyerCombined();
++    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., TestKakutaniSq);
++
++    isAverageOk = NormBox -> TestMean(testNbSims, 0.01);
++    isVarianceOk = NormBox -> TestVariance(testNbSims, 0.01);
++    cout << "Mean OK: " << isAverageOk << " Variance OK:  " << isVarianceOk << std::endl;
++
++    // Exporting the generated nbs as a csv to check distrib with Python
++/*    std::vector<std::vector<double>> values(testNbSims);
++
++    for (size_t i = 0; i < testNbSims; ++i) {
++        values[i] = { 0, 0, NormBox->Generate() };  // Initialize each inner vector with one value
++    }
++    // getting the csv
++    std::string filename = "C:\\Users\\mager\\Downloads\\test_normal.csv";
++    WriteCSV(values, filename);*/
++}
++
+ void TestClassImplementation(){
+     int dim = 3;
+     double T = 1.; // Maturity
+@@ -66,8 +93,8 @@
+         TestCorrelMatrix[i][i] = 1.0;
+     }
+ 
+-    //UniformGenerator* UnifEuropean = new EcuyerCombined();
+-    UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
++    UniformGenerator* UnifEuropean = new EcuyerCombined();
++    //UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
+     NormalBoxMuller* NormBoxEuropean = new NormalBoxMuller(0., 1., UnifEuropean);
+ 
+     // Testing for the european option
+@@ -77,9 +104,11 @@
+ 
+     // Testing for the bermudean option
+     size_t L = 3;
+-    UniformGenerator* Unif = new KakutaniSequence(nbSims, dim, nbSteps);
+-    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
++    //UniformGenerator* UnifBermudean = new KakutaniSequence(nbSims, dim, nbSteps);
++    UniformGenerator* UnifBermudean = new EcuyerCombined();
++
++    NormalBoxMuller* NormBoxBermudean = new NormalBoxMuller(0., 1., UnifBermudean);
+     BermudeanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
+-                                                   TestCorrelMatrix, NormBox, L);
++                                                   TestCorrelMatrix, NormBoxBermudean, L);
+     testBermudeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
+ };
+\ No newline at end of file
+Index: Pricer/BermudeanBasketOption.cpp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include \"BermudeanBasketOption.h\"\r\n#include \"../Utils/Matrix.h\"\r\n#include \"../Utils/basic_functions.h\"\r\n#include \"../SDE/BSEulerND.h\"\r\n#include <memory>\r\n\r\nBermudeanBasketOption::BermudeanBasketOption(\r\n        size_t Dim, double K, double T, double Rate, std::vector<double> Spots,\r\n        std::vector<double> Vols, std::vector<double> Weights,\r\n        std::vector<std::vector<double>> Correls, Normal* Gen, size_t L) :\r\n        BasketOption(Dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)\r\n        {};\r\n\r\nstd::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,\r\n                                                     bool UseControlVariate){\r\n    cout << \"Starting the MC Simulation for the Bermudean Call...\" << endl;\r\n    clock_t start, end;\r\n    start = clock();\r\n\r\n    BSEulerND TestScheme = BSEulerND(Generator, Dimension, Spots, Rate, Vols, &Correls);\r\n    // Computing the theoretical price in case we use the control variate - avoids multiple if tests\r\n    double TheoreticalPrice = TestScheme.PriceBasketCallOption(K, Weights, T, Correls);\r\n\r\n    /* Begin by generating directly nbSim asset paths for the d assets & computing the basket values associated */\r\n    double delta_t = T / NbSteps;\r\n    vector<vector<std::unique_ptr<SinglePath>>> AllAssetPaths(NbSims);\r\n    std::vector<SinglePath*> basketValues(NbSims, nullptr);\r\n    for (size_t nSimul=0; nSimul < NbSims; nSimul++) {\r\n        AllAssetPaths[nSimul].resize(Dimension); /* resizing to hold d SinglePath */\r\n        TestScheme.Simulate(0, T, NbSteps, UseAntithetic); /* Simulating the paths - enables us to reuse antithetic control variate*/\r\n        for (size_t nbAsset=0; nbAsset < Dimension; nbAsset++) {\r\n            AllAssetPaths[nSimul][nbAsset] = std::make_unique<SinglePath>(*TestScheme.GetPath(nbAsset)); /* need to do copy of paths otherwise pointers get deleted every time we re-call the generate function*/\r\n        }\r\n        /* Can finally compute the basket values for that simulation */\r\n        SinglePath* basketValueSimulation = new SinglePath(0.0, T, NbSteps);\r\n        for (size_t i=0; i<NbSteps; i++){\r\n            double currentTimestep = i * delta_t;\r\n            double basketValueSim = 0.0;\r\n            for (size_t d=0; d<Dimension; d++){\r\n                basketValueSim += Weights[d] * AllAssetPaths[nSimul][d]->GetValue(currentTimestep);\r\n            }\r\n            basketValueSimulation->AddValue(basketValueSim);\r\n        }\r\n        basketValues[nSimul] = basketValueSimulation;\r\n    }\r\n    // Backward induction for the stopping times\r\n    vector<vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, T));\r\n\r\n    // Looping through time\r\n    for (size_t i=(NbSteps - 2); i >= 1; i--){\r\n        std::vector<std::vector<double>> basisVectors(NbSims, std::vector<double>(L, 0.0));\r\n        double currentTimestep = i * delta_t; double previousTimestep = (i + 1) * delta_t; /* going backward */\r\n        // Initializing the right hand part of the sum to optimize\r\n        std::vector<double> basisDecompositionVector (L, 0.0);\r\n        // Going through all the simulations for one time-step\r\n        for (size_t nSimul=0; nSimul < NbSims; nSimul++) {\r\n            double previousStoppingTime = stoppingTimes[nSimul][i + 1];\r\n            double currentBasketValue = basketValues[nSimul]->GetValue(currentTimestep);\r\n            double pastStoppingTimeBasketValue = basketValues[nSimul]->GetValue(previousStoppingTime);\r\n            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(pastStoppingTimeBasketValue - K, 0);\r\n            /* Constructing the P vector */\r\n            for (size_t l=0; l < L; l++){\r\n                double basisScalar= pow(currentBasketValue, l);\r\n                basisVectors[nSimul][l] = basisScalar;\r\n                basisDecompositionVector[l] += mulFactor * basisScalar;\r\n            }\r\n        }\r\n        // Can now construct the Phi Matrix\r\n        Matrix Phi = Matrix(basisVectors);\r\n        Matrix H = Matrix(Phi.getTranspose() * Phi);\r\n        // Some gymnastic with matrices to build a column matrix - L usually not too big so should be OK\r\n        std::vector<std::vector<double>> columnMatrix(L, std::vector<double>(1));\r\n        for (size_t l = 0; l < L; l++) {\r\n            columnMatrix[l][0] = basisDecompositionVector[l];\r\n        }\r\n        Matrix basisColumnMatrix(columnMatrix);\r\n        // Can now compute the weights vector alpha\r\n        Matrix Alpha = H.inverseLU() * basisColumnMatrix;\r\n        // And finally update the stopping times - need to re-loop through all the paths\r\n        for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {\r\n            // Computing the basis expansion with alpha coefficients\r\n            double alphaBasisExpansion = 0.0;\r\n            double payoffSimulation = std::max<double>(basketValues[nSimul]->GetValue(currentTimestep) - K, 0);\r\n            for (size_t l=0; l < L; l++){\r\n                alphaBasisExpansion += Alpha.data[l][0] * basisVectors[nSimul][l];\r\n            }\r\n            if (payoffSimulation >= alphaBasisExpansion){\r\n                stoppingTimes[nSimul][i] = currentTimestep;\r\n            }\r\n            else {\r\n                stoppingTimes[nSimul][i] = stoppingTimes[nSimul][i+1];\r\n            }\r\n        }\r\n    }\r\n    // Finally we can value the option\r\n    vector<double> Payoffs(NbSims, 0.0);\r\n    for (size_t nSimul = 0; nSimul < NbSims; nSimul++) {\r\n        double stoppingTimeSimul = stoppingTimes[nSimul][1]; // at t=0, can't update the stopping times since all paths are the same => H matrix non invertible\r\n        if (!UseControlVariate)\r\n            Payoffs[nSimul] = exp(-Rate * stoppingTimeSimul) *\r\n                              std::max<double>(basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0);\r\n        else {\r\n            double ControlVariateLocalPayoff = 0.0;\r\n            for (size_t d = 0; d < Dimension; d++) {\r\n                ControlVariateLocalPayoff += Weights[d] * log(AllAssetPaths[nSimul][d]->GetValue(T));\r\n            }\r\n            Payoffs[nSimul] = TheoreticalPrice + exp(-Rate * stoppingTimeSimul) * (std::max<double>(\r\n                    basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0) - max<double>(\r\n                    exp(ControlVariateLocalPayoff) - K, 0.0));\r\n\r\n        }\r\n    }\r\n    end = clock();\r\n    cout << \"The price of the Bermudean Basket Call with MC is : \" << meanVector(Payoffs) << \" found in \"\r\n         << (end - start) * 1000.0 / CLOCKS_PER_SEC << \"ms\" << endl;\r\n    end = clock();\r\n    cout << \"The variance of the Bermudean Basket Call with MC is : \" << varianceVector(Payoffs) << \" found in \"\r\n         << (end - start) * 1000.0 / CLOCKS_PER_SEC << \"ms\" << endl;\r\n};\r\n\r\nBermudeanBasketOption::~BermudeanBasketOption()\r\n{\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Pricer/BermudeanBasketOption.cpp b/Pricer/BermudeanBasketOption.cpp
+--- a/Pricer/BermudeanBasketOption.cpp	(revision b872632747f788410769105264ad653fd6c9a5ac)
++++ b/Pricer/BermudeanBasketOption.cpp	(date 1746971132207)
+@@ -25,6 +25,7 @@
+     double delta_t = T / NbSteps;
+     vector<vector<std::unique_ptr<SinglePath>>> AllAssetPaths(NbSims);
+     std::vector<SinglePath*> basketValues(NbSims, nullptr);
++
+     for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
+         AllAssetPaths[nSimul].resize(Dimension); /* resizing to hold d SinglePath */
+         TestScheme.Simulate(0, T, NbSteps, UseAntithetic); /* Simulating the paths - enables us to reuse antithetic control variate*/
+@@ -44,36 +45,44 @@
+         basketValues[nSimul] = basketValueSimulation;
+     }
+     // Backward induction for the stopping times
+-    vector<vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, T));
++    std::vector<std::vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, 0.0));
++    for (size_t n = 0; n < NbSims; ++n) {
++        stoppingTimes[n][NbSteps - 1] = 1.0;
++    }
+ 
+     // Looping through time
+     for (size_t i=(NbSteps - 2); i >= 1; i--){
+         std::vector<std::vector<double>> basisVectors(NbSims, std::vector<double>(L, 0.0));
+-        double currentTimestep = i * delta_t; double previousTimestep = (i + 1) * delta_t; /* going backward */
+-        // Initializing the right hand part of the sum to optimize
+-        std::vector<double> basisDecompositionVector (L, 0.0);
++        double currentTimestep = i * delta_t; /* going backward */
++        // Initializing the right hand part of the sum to optimize - colum vector
++        vector<vector<double>> basisDecompositionVector (L, vector<double>(1, 0.0));
++
++        /*vector<double> basketValuesAtTimestep(NbSims, 0.0);
++        for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
++            basketValuesAtTimestep[nSimul] = basketValues[nSimul] ->GetValue(currentTimestep);
++        }
++        double crossSectionalMeanBasketValue = meanVector(basketValuesAtTimestep);
++        double crossSectionalStdBasketValue = sqrt(varianceVector(basketValuesAtTimestep));*/
++
+         // Going through all the simulations for one time-step
+         for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
+             double previousStoppingTime = stoppingTimes[nSimul][i + 1];
+             double currentBasketValue = basketValues[nSimul]->GetValue(currentTimestep);
+             double pastStoppingTimeBasketValue = basketValues[nSimul]->GetValue(previousStoppingTime);
+-            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(pastStoppingTimeBasketValue - K, 0);
++            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) * max<double>(pastStoppingTimeBasketValue - K, 0.0);
+             /* Constructing the P vector */
+             for (size_t l=0; l < L; l++){
+-                double basisScalar= pow(currentBasketValue, l);
++                //double basisScalar = laguerrePolynomial(l, (currentBasketValue - crossSectionalMeanBasketValue)/crossSectionalStdBasketValue);
++                double basisScalar = laguerrePolynomial(l, currentBasketValue);
+                 basisVectors[nSimul][l] = basisScalar;
+-                basisDecompositionVector[l] += mulFactor * basisScalar;
++                basisDecompositionVector[l][0] += mulFactor * basisScalar;
+             }
+         }
+         // Can now construct the Phi Matrix
+         Matrix Phi = Matrix(basisVectors);
+         Matrix H = Matrix(Phi.getTranspose() * Phi);
+-        // Some gymnastic with matrices to build a column matrix - L usually not too big so should be OK
+-        std::vector<std::vector<double>> columnMatrix(L, std::vector<double>(1));
+-        for (size_t l = 0; l < L; l++) {
+-            columnMatrix[l][0] = basisDecompositionVector[l];
+-        }
+-        Matrix basisColumnMatrix(columnMatrix);
++
++        Matrix basisColumnMatrix(basisDecompositionVector);
+         // Can now compute the weights vector alpha
+         Matrix Alpha = H.inverseLU() * basisColumnMatrix;
+         // And finally update the stopping times - need to re-loop through all the paths
+@@ -107,16 +116,24 @@
+             Payoffs[nSimul] = TheoreticalPrice + exp(-Rate * stoppingTimeSimul) * (std::max<double>(
+                     basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0) - max<double>(
+                     exp(ControlVariateLocalPayoff) - K, 0.0));
+-
+         }
+     }
++    double meanPrice = meanVector(Payoffs);
++    double varPrice = varianceVector(Payoffs);
+     end = clock();
+-    cout << "The price of the Bermudean Basket Call with MC is : " << meanVector(Payoffs) << " found in "
++    cout << "The price of the Bermudean Basket Call with MC is : " << meanPrice << " found in "
+          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+-    end = clock();
+-    cout << "The variance of the Bermudean Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
++    cout << "The variance of the Bermudean Basket Call with MC is : " << varPrice << " found in "
+          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
++    std::vector<double> results;
++    results.reserve(3);
++    results.push_back(meanPrice);
++    results.push_back(varPrice);
++    results.push_back(static_cast<double>(NbSims));
++    return results;
+ };
++
++
+ 
+ BermudeanBasketOption::~BermudeanBasketOption()
+ {
