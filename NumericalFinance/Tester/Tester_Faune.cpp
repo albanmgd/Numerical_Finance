@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "BermudeanBasketOption.h"
+#include "KakutaniSequence.h"
 #include "../Pricer/EuropeanBasketOption.h"
 #include "../SDE/BlackScholesND.h"
 #include "../RandomGenerator/LinearCongruential.h"
@@ -24,15 +26,17 @@
 
 void TestEulerPricer();
 void BasicMC();
-void TestNumberSim();
+void TestEuroBasket();
+void TestBermudBasket();
 
 int main() {
 //    TestEulerPricer();
 //    BasicMC();
-    TestNumberSim();
+//    TestEuroBasket();
+      TestBermudBasket();
 }
 
-void TestNumberSim() {
+void TestBermudBasket() {
     // first we set the parameters
     int nb_assets = 3;
     double maturity = 1.0;
@@ -47,8 +51,48 @@ void TestNumberSim() {
     for (int i = 0; i < nb_assets; i++) {
         correl_mat[i][i] = 1.0;
     }
-    bool use_control_variate = true;
-    bool use_antithetic = true;
+    bool use_control_variate = false;
+    bool use_antithetic = false;
+
+    // and we loop on the number of simuls
+
+    // storing for res
+    std::vector<vector<double>> results;
+    results.reserve(50); // change later as function input
+
+    //loop
+    for (size_t i = 1000; i <=25000; i +=500) {
+        KakutaniSequence* Kakutani = new KakutaniSequence(i, nb_assets, nb_steps);
+        NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Kakutani);
+        BermudeanBasketOption bermud_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox, 3);
+
+        std::vector<double> price= bermud_basket_opt.PriceCall(nb_steps, i, use_antithetic, use_control_variate);
+        results.push_back(std::move(price));
+        cout <<  "Pricing done for " << i << " simulations" << endl;
+    }
+
+    // getting the csv
+    std::string filename = "C:\\Users\\faune\\numerical-finance\\Numerical_Finance\\NumericalFinance\\Results\\bermud_kakutani.csv";
+    WriteCSV(results, filename);
+}
+
+void TestEuroBasket() {
+    // first we set the parameters
+    int nb_assets = 3;
+    double maturity = 1.0;
+    double strike = 60;
+    size_t nb_steps = 365;
+    // size_t nb_sim = 1e4;
+    vector<double> spots = {100,50,60};
+    vector<double> vols = {0.10,0.25,0.16};
+    double rate = 0.05;
+    vector<double> weights = {0.10, 0.7, 0.2};
+    vector<vector<double>> correl_mat(nb_assets, vector<double>(nb_assets, 0.1));
+    for (int i = 0; i < nb_assets; i++) {
+        correl_mat[i][i] = 1.0;
+    }
+    bool use_control_variate = false;
+    bool use_antithetic = false;
     // we start the pricing
     UniformGenerator* Unif = new EcuyerCombined();
     NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);
