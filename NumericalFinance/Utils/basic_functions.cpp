@@ -25,3 +25,20 @@ double varianceVector(std::vector<double> vec){
     }
     return var / nbElements;
 }
+
+double laguerrePolynomial(std::size_t l, double x) {
+    if (l == 0) return 1.0;
+    if (l == 1) return 1.0 - x;
+
+    double L_prev2 = 1.0;          // L_0(x)
+    double L_prev1 = 1.0 - x;      // L_1(x)
+    double L_curr;
+
+    for (size_t n = 2; n <= l; ++n) {
+        L_curr = ((2 * n - 1 - x) * L_prev1 - (n - 1) * L_prev2) / n;
+        L_prev2 = L_prev1;
+        L_prev1 = L_curr;
+    }
+
+    return L_curr;
+}

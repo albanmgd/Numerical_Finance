@@ -25,6 +25,7 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
     double delta_t = T / NbSteps;
     vector<vector<std::unique_ptr<SinglePath>>> AllAssetPaths(NbSims);
     std::vector<SinglePath*> basketValues(NbSims, nullptr);
+
     for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
         AllAssetPaths[nSimul].resize(Dimension); /* resizing to hold d SinglePath */
         TestScheme.Simulate(0, T, NbSteps, UseAntithetic); /* Simulating the paths - enables us to reuse antithetic control variate*/
@@ -44,36 +45,44 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
         basketValues[nSimul] = basketValueSimulation;
     }
     // Backward induction for the stopping times
-    vector<vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, T));
+    std::vector<std::vector<double>> stoppingTimes(NbSims, std::vector<double>(NbSteps, 0.0));
+    for (size_t n = 0; n < NbSims; ++n) {
+        stoppingTimes[n][NbSteps - 1] = 1.0;
+    }
 
     // Looping through time
     for (size_t i=(NbSteps - 2); i >= 1; i--){
         std::vector<std::vector<double>> basisVectors(NbSims, std::vector<double>(L, 0.0));
-        double currentTimestep = i * delta_t; double previousTimestep = (i + 1) * delta_t; /* going backward */
-        // Initializing the right hand part of the sum to optimize
-        std::vector<double> basisDecompositionVector (L, 0.0);
+        double currentTimestep = i * delta_t; /* going backward */
+        // Initializing the right hand part of the sum to optimize - colum vector
+        vector<vector<double>> basisDecompositionVector (L, vector<double>(1, 0.0));
+
+        /*vector<double> basketValuesAtTimestep(NbSims, 0.0);
+        for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
+            basketValuesAtTimestep[nSimul] = basketValues[nSimul] ->GetValue(currentTimestep);
+        }
+        double crossSectionalMeanBasketValue = meanVector(basketValuesAtTimestep);
+        double crossSectionalStdBasketValue = sqrt(varianceVector(basketValuesAtTimestep));*/
+
         // Going through all the simulations for one time-step
         for (size_t nSimul=0; nSimul < NbSims; nSimul++) {
             double previousStoppingTime = stoppingTimes[nSimul][i + 1];
             double currentBasketValue = basketValues[nSimul]->GetValue(currentTimestep);
             double pastStoppingTimeBasketValue = basketValues[nSimul]->GetValue(previousStoppingTime);
-            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) *  std::max<double>(pastStoppingTimeBasketValue - K, 0);
+            double mulFactor = exp(- Rate * (previousStoppingTime - currentTimestep)) * max<double>(pastStoppingTimeBasketValue - K, 0.0);
             /* Constructing the P vector */
             for (size_t l=0; l < L; l++){
-                double basisScalar= pow(currentBasketValue, l);
+                //double basisScalar = laguerrePolynomial(l, (currentBasketValue - crossSectionalMeanBasketValue)/crossSectionalStdBasketValue);
+                double basisScalar = laguerrePolynomial(l, currentBasketValue);
                 basisVectors[nSimul][l] = basisScalar;
-                basisDecompositionVector[l] += mulFactor * basisScalar;
+                basisDecompositionVector[l][0] += mulFactor * basisScalar;
             }
         }
         // Can now construct the Phi Matrix
         Matrix Phi = Matrix(basisVectors);
         Matrix H = Matrix(Phi.getTranspose() * Phi);
-        // Some gymnastic with matrices to build a column matrix - L usually not too big so should be OK
-        std::vector<std::vector<double>> columnMatrix(L, std::vector<double>(1));
-        for (size_t l = 0; l < L; l++) {
-            columnMatrix[l][0] = basisDecompositionVector[l];
-        }
-        Matrix basisColumnMatrix(columnMatrix);
+
+        Matrix basisColumnMatrix(basisDecompositionVector);
         // Can now compute the weights vector alpha
         Matrix Alpha = H.inverseLU() * basisColumnMatrix;
         // And finally update the stopping times - need to re-loop through all the paths
@@ -107,16 +116,24 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
             Payoffs[nSimul] = TheoreticalPrice + exp(-Rate * stoppingTimeSimul) * (std::max<double>(
                     basketValues[nSimul]->GetValue(stoppingTimeSimul) - K, 0) - max<double>(
                     exp(ControlVariateLocalPayoff) - K, 0.0));
-
         }
     }
+    double meanPrice = meanVector(Payoffs);
+    double varPrice = varianceVector(Payoffs);
     end = clock();
-    cout << "The price of the Bermudean Basket Call with MC is : " << meanVector(Payoffs) << " found in "
+    cout << "The price of the Bermudean Basket Call with MC is : " << meanPrice << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
-    end = clock();
-    cout << "The variance of the Bermudean Basket Call with MC is : " << varianceVector(Payoffs) << " found in "
+    cout << "The variance of the Bermudean Basket Call with MC is : " << varPrice << " found in "
          << (end - start) * 1000.0 / CLOCKS_PER_SEC << "ms" << endl;
+    std::vector<double> results;
+    results.reserve(3);
+    results.push_back(meanPrice);
+    results.push_back(varPrice);
+    results.push_back(static_cast<double>(NbSims));
+    return results;
 };
+
+
 
 BermudeanBasketOption::~BermudeanBasketOption()
 {
