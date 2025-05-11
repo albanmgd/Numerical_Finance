@@ -23,6 +23,8 @@ std::vector<double> EuropeanBasketOption::PriceCall(size_t NbSteps, size_t NbSim
     vector<double> Payoffs (NbSims, 0.0);
 
     for (size_t nSimul=0; nSimul < NbSims; nSimul++){
+        // cout << "Done for sim: " << nSimul << endl;
+
         double LocalPayoff = 0.0;
         double ControlVariateLocalPayoff = 0.0;
         TestScheme.Simulate(0, T, NbSteps, UseAntithetic);

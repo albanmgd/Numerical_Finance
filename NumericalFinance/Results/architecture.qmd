@@ -1,0 +1,32 @@
+```{mermaid}
+
+classDiagram
+
+%% First group: Number generation
+class UniformGenerator
+class KakutaniSequence {
+    + double Generate()
+}
+UniformGenerator --> KakutaniSequence
+
+%% Second group: Random process simulation
+class RandomProcess
+class BrownianND {
+    + void Simulate()
+}
+RandomProcess --> BrownianND
+
+%% Third group: Pricing logic
+class BasketOption {
+    + virtual vector double PriceCall()
+}
+class BermudeanBasketOption {
+    + vector double PriceCall()
+}
+class EuropeanBasketOption {
+    + vector double PriceCall()
+}
+BasketOption --> EuropeanBasketOption
+BasketOption --> BermudeanBasketOption
+
+```
