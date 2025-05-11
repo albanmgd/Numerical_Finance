@@ -69,8 +69,7 @@ add_executable(NumericalFinance
         SDE/SinglePath.cpp
         SDE/SinglePath.h
         Tester/Tester.cpp
-        Tester/Tester_Alban.cpp
-        Tester/Tester_Faune.cpp
+        Tester/Files_Report_Generation.cpp
         Utils/basic_functions.cpp
         Utils/basic_functions.h
         Utils/Matrix.cpp
