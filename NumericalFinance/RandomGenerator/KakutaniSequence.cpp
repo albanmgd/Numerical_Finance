@@ -74,7 +74,7 @@ void KakutaniSequence::createKakutaniSequence3D() {
 
 double KakutaniSequence::Generate() {
     /* Once we're here we already have one a nbSIms *nbSteps*d matrix of RVs.
-     * We just need to send return one of them in the correct order */
+     * We just need to return them in the correct order */
     // Safety check: make sure we don't go out of bounds
     if (countNbSim >= Sequence.size()) {
         throw std::out_of_range("All simulations exhausted in KakutaniSequence::Generate().");
@@ -95,6 +95,5 @@ double KakutaniSequence::Generate() {
     } else {
         localD += 1;
     }
-
     return output;
 }

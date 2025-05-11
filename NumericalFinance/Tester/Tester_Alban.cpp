@@ -1,28 +1,31 @@
 #include <iostream>
 #include <algorithm>
 #include <ctime>
-#include <memory>
 
 #include "../Utils/Matrix.h"
 #include "../Utils/basic_functions.h"
+#include "../Utils/CSVWriter.h"
 #include "../RandomGenerator/Normal.h"
 #include "../SDE/BrownianND.h"
 #include "../SDE/BSEulerND.h"
 #include "../RandomGenerator/KakutaniSequence.h"
+#include "../RandomGenerator/Normal.h"
 #include "../RandomGenerator/EcuyerCombined.h"
 #include "../Pricer/EuropeanBasketOption.h"
 #include "../Pricer/BermudeanBasketOption.h"
 
 void TestPAdic();
+void TestMeanKakutani();
 void TestClassImplementation();
 void TestKakutaniSequence();
 void TestVarianceReductionKakutaniSequence();
 
 /*int main()
 {
-   TestPAdic();
-   TestKakutaniSequence();
-   TestClassImplementation();
+//   TestPAdic();
+//   TestKakutaniSequence();
+//    TestMeanKakutani();
+    TestClassImplementation();
 //    TestVarianceReductionKakutaniSequence();
 //    TestLongstaffSchwarz();
 }*/
@@ -50,6 +53,30 @@ void TestKakutaniSequence(){
     }
 };
 
+void TestMeanKakutani() {
+    int testNbSims = 1e3;
+    int testDim = 3; /* testing with d assets */
+    int testN = 365;
+    bool isAverageOk, isVarianceOk;
+    KakutaniSequence* TestKakutaniSq = new KakutaniSequence(testNbSims, testDim, testN);
+    UniformGenerator* UnifEuropean = new EcuyerCombined();
+    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., TestKakutaniSq);
+
+    isAverageOk = NormBox -> TestMean(testNbSims, 0.01);
+    isVarianceOk = NormBox -> TestVariance(testNbSims, 0.01);
+    cout << "Mean OK: " << isAverageOk << " Variance OK:  " << isVarianceOk << std::endl;
+
+    // Exporting the generated nbs as a csv to check distrib with Python
+/*    std::vector<std::vector<double>> values(testNbSims);
+
+    for (size_t i = 0; i < testNbSims; ++i) {
+        values[i] = { 0, 0, NormBox->Generate() };  // Initialize each inner vector with one value
+    }
+    // getting the csv
+    std::string filename = "C:\\Users\\mager\\Downloads\\test_normal.csv";
+    WriteCSV(values, filename);*/
+}
+
 void TestClassImplementation(){
     int dim = 3;
     double T = 1.; // Maturity
@@ -66,8 +93,8 @@ void TestClassImplementation(){
         TestCorrelMatrix[i][i] = 1.0;
     }
 
-    //UniformGenerator* UnifEuropean = new EcuyerCombined();
-    UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
+    UniformGenerator* UnifEuropean = new EcuyerCombined();
+    //UniformGenerator* UnifEuropean = new KakutaniSequence(nbSims, dim, nbSteps);
     NormalBoxMuller* NormBoxEuropean = new NormalBoxMuller(0., 1., UnifEuropean);
 
     // Testing for the european option
@@ -77,9 +104,11 @@ void TestClassImplementation(){
 
     // Testing for the bermudean option
     size_t L = 3;
-    UniformGenerator* Unif = new KakutaniSequence(nbSims, dim, nbSteps);
-    NormalBoxMuller* NormBox = new NormalBoxMuller(0., 1., Unif);
+    //UniformGenerator* UnifBermudean = new KakutaniSequence(nbSims, dim, nbSteps);
+    UniformGenerator* UnifBermudean = new EcuyerCombined();
+
+    NormalBoxMuller* NormBoxBermudean = new NormalBoxMuller(0., 1., UnifBermudean);
     BermudeanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
-                                                   TestCorrelMatrix, NormBox, L);
+                                                   TestCorrelMatrix, NormBoxBermudean, L);
     testBermudeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
 };
