@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../Pricer/BermudeanBasketOption.h"
+#include "../Pricer/BermudanBasketOption.h"
 #include "KakutaniSequence.h"
 #include "../Pricer/EuropeanBasketOption.h"
 #include "../SDE/BlackScholesND.h"
@@ -26,7 +26,7 @@ void BasketKakutani();
 
 int main() {
 //    EuroBasket();
-//      BermudBasket();
+//    BermudBasket();
     BasketKakutani();
 }
 
@@ -51,7 +51,7 @@ void BermudBasket() {
     // we start the pricing
     UniformGenerator* Unif = new EcuyerCombined();
     NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);
-    BermudeanBasketOption bermud_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox, 3);
+    BermudanBasketOption bermud_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox, 3);
     // storing for res
     std::vector<vector<double>> results;
     results.reserve(50); // change later as function input
@@ -64,7 +64,7 @@ void BermudBasket() {
         cout <<  "Pricing done for " << i << " simulations" << endl;
     }
 
-    // getting the csv
+    // getting the csv - use own path
     std::string filename = "C:\\Users\\faune\\numerical-finance\\Numerical_Finance\\NumericalFinance\\Results\\bermud_scv.csv";
     WriteCSV(results, filename);
 }
@@ -93,8 +93,6 @@ void EuroBasket() {
     NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Unif);
 
     EuropeanBasketOption euro_basket_opt(nb_assets, strike, maturity, rate, spots, vols, weights, correl_mat, NormBox);
-    // and we loop on the number of simuls
-
     // storing for res
     std::vector<vector<double>> results;
     results.reserve(50); // change later as function input
@@ -106,7 +104,7 @@ void EuroBasket() {
         cout <<  "Pricing done for " << i << " simulations" << endl;
     }
 
-    // getting the csv
+    // getting the csv - use own path
     std::string filename = "C:\\Users\\faune\\numerical-finance\\Numerical_Finance\\NumericalFinance\\Results\\combined_res_mc.csv";
     WriteCSV(results, filename);
 }
@@ -132,13 +130,11 @@ void BasketKakutani() {
     bool use_control_variate = true;
     bool use_antithetic = false;
 
-    // and we loop on the number of simuls
-
     // storing for res
     std::vector<vector<double>> results;
     results.reserve(25); // change later as function input
 
-    //loop
+    // loop
     for (size_t i = 1000; i <=12500; i +=500) {
         KakutaniSequence* Kakutani = new KakutaniSequence(i, nb_assets, nb_steps);
         NormalBoxMuller* NormBox = new NormalBoxMuller(0.,1., Kakutani);
@@ -149,7 +145,7 @@ void BasketKakutani() {
         cout <<  "Pricing done for " << i << " simulations" << endl;
     }
 
-    // getting the csv
-    std::string filename = "C:\\Users\\mager\\Downloads\\euro.csv";
+    // getting the csv - use own path
+    std::string filename = "C:\\Users\\mager\\Downloads\\european_kakutani_control_variate.csv";
     WriteCSV(results, filename);
 }

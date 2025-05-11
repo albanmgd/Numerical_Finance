@@ -18,8 +18,8 @@ add_executable(NumericalFinance
         PDE/R2R1Function.h
         Pricer/BasketOption.cpp
         Pricer/BasketOption.h
-        Pricer/BermudeanBasketOption.cpp
-        Pricer/BermudeanBasketOption.h
+        Pricer/BermudanBasketOption.cpp
+        Pricer/BermudanBasketOption.h
         Pricer/EuropeanBasketOption.cpp
         Pricer/EuropeanBasketOption.h
         RandomGenerator/Bernoulli.cpp

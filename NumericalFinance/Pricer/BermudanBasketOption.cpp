@@ -1,18 +1,18 @@
-#include "BermudeanBasketOption.h"
+#include "BermudanBasketOption.h"
 #include "../Utils/Matrix.h"
 #include "../Utils/basic_functions.h"
 #include "../SDE/BSEulerND.h"
 #include <memory>
 
-BermudeanBasketOption::BermudeanBasketOption(
+BermudanBasketOption::BermudanBasketOption(
         size_t Dim, double K, double T, double Rate, std::vector<double> Spots,
         std::vector<double> Vols, std::vector<double> Weights,
         std::vector<std::vector<double>> Correls, Normal* Gen, size_t L) :
         BasketOption(Dim, K, T, Rate, Spots, Vols,Weights,Correls, Gen), L(L)
         {};
 
-std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
-                                                     bool UseControlVariate){
+std::vector<double> BermudanBasketOption::PriceCall(size_t NbSteps, size_t NbSims, bool UseAntithetic,
+                                                    bool UseControlVariate){
     cout << "Starting the MC Simulation for the Bermudean Call..." << endl;
     clock_t start, end;
     start = clock();
@@ -135,6 +135,6 @@ std::vector<double> BermudeanBasketOption::PriceCall(size_t NbSteps, size_t NbSi
 
 
 
-BermudeanBasketOption::~BermudeanBasketOption()
+BermudanBasketOption::~BermudanBasketOption()
 {
 }

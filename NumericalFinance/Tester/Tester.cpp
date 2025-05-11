@@ -13,7 +13,7 @@
 #include "../SDE/BSEuler1D.h"
 #include "../SDE/BrownianND.h"
 #include "../Pricer/EuropeanBasketOption.h"
-#include "../Pricer/BermudeanBasketOption.h"
+#include "../Pricer/BermudanBasketOption.h"
 #include "../Utils/Matrix.h"
 #include "../Utils/basic_functions.h"
 #include "../Utils/CSVWriter.h"
@@ -260,7 +260,7 @@ void TestClassImplementation() {
     UniformGenerator* UnifBermudean = new EcuyerCombined();
 
     NormalBoxMuller* NormBoxBermudean = new NormalBoxMuller(0., 1., UnifBermudean);
-    BermudeanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
-                                                    TestCorrelMatrix, NormBoxBermudean, L);
+    BermudanBasketOption testBermudeanBasketOption(dim, K, T, Rate, Spots, Vols, Weights,
+                                                   TestCorrelMatrix, NormBoxBermudean, L);
     testBermudeanBasketOption.PriceCall(nbSteps, nbSims, false, false);
 };
