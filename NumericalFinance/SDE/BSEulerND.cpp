@@ -16,7 +16,6 @@ void BSEulerND::Simulate(double startTime, double endTime, size_t nbSteps, bool 
 {
     /*Main idea is: when we simulate the 'classic' paths, we also simulate antithetic paths if antitheticRV.
      * The next time we call this function, if antitheticRV then we return the previously simulated antithetic paths.
-     *
      * */
 
     // we delete all existing paths in every case since we'll either re-simulate them or re-write them

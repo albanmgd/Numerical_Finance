@@ -28,12 +28,13 @@ void SinglePath::AddValue(double val)
 
 double SinglePath::GetValue(double time)
 {
+    double precision = 1e-10; // used to handle rounding errors at the end of the series
 	double result = 0.;
 	if (time <= StartTime)
 	{
 		result = Values[0];
 	}
-	else if (time >= EndTime)
+	else if (time >= Times.back() - precision) // time greater than EndTime or between the last value and EndTime up to precision
 	{
 		result = Values.back();
 	}

@@ -19,7 +19,7 @@ RandomGenerator::~RandomGenerator()
 bool RandomGenerator::TestMean(myLong nbSim, double tol)
 {
 	double computedMean = Mean(nbSim);
-	double spread = abs(computedMean - targetMean);
+	double spread = std::abs(computedMean - targetMean);
 
 	if (spread > tol)
 		return false;
@@ -34,7 +34,7 @@ bool RandomGenerator::TestMean(myLong nbSim, double tol)
 bool RandomGenerator::TestVariance(myLong nbSim, double tol)
 {
 	double computedVariance = Variance(nbSim);
-	double spread = abs(computedVariance - targetVariance);
+	double spread = std::abs(computedVariance - targetVariance);
 
 	if (spread > tol)
 		return false;
