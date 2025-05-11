@@ -1,4 +1,4 @@
-# Numerical Finance 2024/2025 - PRICING OF BERMUDAN BASKET OPTIONS
+# Numerical Finance 2024/2025 - Pricing of Bermudan basket options
 Blanchard Faune and Magerand Alban, within the scope of the <code>M203 Numerical finance class</code>. \
 In this project, we dig into the pricing of both European and Bermudean calls on basket options. \
 We implement the following variance reduction techniques: 
